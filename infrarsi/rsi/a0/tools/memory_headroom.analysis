@@ -1,0 +1,11 @@
+m = data['memory']
+cap = data['task']['hbm_cap_gib']
+peak = m['max_peak_reserved_gib']
+if peak == None:
+    return {'known': False}
+ranks = m['reserved_per_rank']
+spread = 0
+if len(ranks) > 0:
+    spread = max(ranks) - min(ranks)
+retries = data['events']['alloc_retries']
+return {'known': True, 'peak_reserved_gib': peak, 'headroom_gib': round(cap - peak, 3), 'rank_spread_gib': round(spread, 3), 'alloc_retries': retries, 'tight': cap - peak < 4, 'ample': cap - peak > 20}

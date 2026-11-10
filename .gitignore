@@ -1,0 +1,14 @@
+# Local environment, build and test output
+.venv/
+*.egg-info/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Pinned Claude Code CLI binary (about 295 MB)
+.cli/
+
+# Third-party clones, wheels and private solutions: fetched for baselines, never redistributed.
+# FETCH_RECORD.json records each clone's URL and commit.
+third_party_src/*
+!third_party_src/FETCH_RECORD.json

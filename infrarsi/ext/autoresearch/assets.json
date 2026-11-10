@@ -1,0 +1,184 @@
+{
+ "data": {
+  "shard_00000.parquet": "054ddbd98abf30d773c54de578fc9d579bafeb6c14e04e97bd36aa90e825bf9b",
+  "shard_00001.parquet": "d4cfe1de19f4fd976022a9047458655968bc5583582ec5fa714801ec2be2c93c",
+  "shard_00002.parquet": "5e80d7596d53be648d841ea5811082747281c39f6851e10dd90375a84bc509a7",
+  "shard_00003.parquet": "b349c85d4b993d98e2328833ecfd3734692e0395a592d89858bae34a4ba73c59",
+  "shard_00004.parquet": "87dae96fe1a6116c54c7873aadb81832178a36755991befd1b3b641c76244474",
+  "shard_00005.parquet": "3d9aebf138ef69cff2585a686d7f21585b7ffc0de4655f8e7723590418583bd6",
+  "shard_00006.parquet": "6a3f2afde8f1a39f9283ea9d9e9ee6431634d6881b63798176bf64efc3f33576",
+  "shard_00007.parquet": "731eea337d941e5b18a9a4e2bbe73a517dac45d91bb93ae2e69346c68c5f37f6",
+  "shard_00008.parquet": "e78379132451838afabed9034b5483a2f3bc5a422bed8b55b99f2bbb9a128755",
+  "shard_00009.parquet": "f22410fe8f13b6976a2860a8a82ee71e838f4ee9b605d61584aaa963f966e120",
+  "shard_06542.parquet": "769fe59d108dfd2cfa186c63173b83fbfb90a7adb3519519ba6eaa6ca9889f94"
+ },
+ "kernel": {
+  "__init__.py": "29756640933e2a159cd94a9625eb2ea4268ffa6a80bd3c7bc86b9e1404e09471",
+  "_ops.py": "cf66e040c4e61bb0c875e5c393202e6e7a7a48a7d89f4b28a633c4746d759570",
+  "flash_attn3/__init__.py": "0757fb1e297d4d48dfb3fe1ee969744dd1079c322d1227017527d8f791a6a62a",
+  "flash_attn_config.py": "bb1a3e7b231c0e2b7fffc603692e11b64e414cc2b34d22bdb4e2938dd5957bfc",
+  "flash_attn_interface.py": "cb46c3d89606305817ea20eb7b7cc9376b013eeabfd7637a328e7967e1d008d4",
+  "metadata.json": "bf7062340012da017522a7f276f972958e7c8317417b43ff19cfd3a482d63827"
+ },
+ "kernel_so": {
+  "_flash_attn3_cuda_2d990fe.abi3.so": "385c5960f738f6c2f217ca93a46fb9be003e7076d60a5711cef8bebdf19eee20"
+ },
+ "measured_utc": "2026-10-20T21:32:44.350383+00:00",
+ "node": "WINH0",
+ "prep": {
+  "tokenizer_determinism": {
+   "deterministic": true,
+   "rc": "rc=0",
+   "retrained_sha256": {
+    "token_bytes.pt": "23517e0590d6aa9389c3263fab1f6062b2810b7c398a7b380291857639ac8d98",
+    "tokenizer.pkl": "888c9fa865c72c25f9c5e9467136a9cc8655253db459fb97481deb326681c629"
+   },
+   "same": {
+    "token_bytes.pt": true,
+    "tokenizer.pkl": true
+   }
+  },
+  "tokenizer_freeze": {
+   "sha256": {
+    "token_bytes.pt": "23517e0590d6aa9389c3263fab1f6062b2810b7c398a7b380291857639ac8d98",
+    "tokenizer.pkl": "888c9fa865c72c25f9c5e9467136a9cc8655253db459fb97481deb326681c629"
+   },
+   "tokenizer": "copied from R2"
+  }
+ },
+ "reference": {
+  "attempt_id": "a21767e9dbd4f",
+  "first_losses": [
+   9.011198,
+   8.854702,
+   8.442315,
+   7.971719,
+   7.578772,
+   7.24885,
+   6.998087,
+   6.787092,
+   6.607007,
+   6.455167
+  ],
+  "gpu": [
+   0
+  ],
+  "node": "WINH0",
+  "num_steps": 936,
+  "optimizer_groups": [
+   {
+    "beta2": null,
+    "betas": [
+     0.8,
+     0.95
+    ],
+    "eps": 1e-10,
+    "initial_lr": 0.004898979485566357,
+    "kind": "adamw",
+    "n_tensors": 1,
+    "ns_steps": null,
+    "numel": 4194304
+   },
+   {
+    "beta2": null,
+    "betas": [
+     0.8,
+     0.95
+    ],
+    "eps": 1e-10,
+    "initial_lr": 0.7348469228349535,
+    "kind": "adamw",
+    "n_tensors": 1,
+    "ns_steps": null,
+    "numel": 4194304
+   },
+   {
+    "beta2": null,
+    "betas": [
+     0.8,
+     0.95
+    ],
+    "eps": 1e-10,
+    "initial_lr": 0.7348469228349535,
+    "kind": "adamw",
+    "n_tensors": 4,
+    "ns_steps": null,
+    "numel": 16777216
+   },
+   {
+    "beta2": null,
+    "betas": [
+     0.8,
+     0.95
+    ],
+    "eps": 1e-10,
+    "initial_lr": 0.005,
+    "kind": "adamw",
+    "n_tensors": 1,
+    "ns_steps": null,
+    "numel": 8
+   },
+   {
+    "beta2": null,
+    "betas": [
+     0.96,
+     0.95
+    ],
+    "eps": 1e-10,
+    "initial_lr": 0.5,
+    "kind": "adamw",
+    "n_tensors": 1,
+    "ns_steps": null,
+    "numel": 8
+   },
+   {
+    "beta2": 0.95,
+    "betas": null,
+    "eps": null,
+    "initial_lr": 0.04,
+    "kind": "muon",
+    "n_tensors": 4,
+    "ns_steps": 5,
+    "numel": 512
+   },
+   {
+    "beta2": 0.95,
+    "betas": null,
+    "eps": null,
+    "initial_lr": 0.04,
+    "kind": "muon",
+    "n_tensors": 32,
+    "ns_steps": 5,
+    "numel": 8388608
+   },
+   {
+    "beta2": 0.95,
+    "betas": null,
+    "eps": null,
+    "initial_lr": 0.04,
+    "kind": "muon",
+    "n_tensors": 8,
+    "ns_steps": 5,
+    "numel": 8388608
+   },
+   {
+    "beta2": 0.95,
+    "betas": null,
+    "eps": null,
+    "initial_lr": 0.04,
+    "kind": "muon",
+    "n_tensors": 8,
+    "ns_steps": 5,
+    "numel": 8388608
+   }
+  ],
+  "prepare_variant": "h2d_sync",
+  "receipt": "E:/tr/tyc_sftv2aliyun/reports/infra_rsi_system_20261020/execution/ext_bench/autoresearch/x1check_20261021/receipts/a21767e9dbd4f.json",
+  "val_bpb": 0.9963646606577251
+ },
+ "schema": "ext-autoresearch-assets-v1",
+ "tokenizer": {
+  "token_bytes.pt": "23517e0590d6aa9389c3263fab1f6062b2810b7c398a7b380291857639ac8d98",
+  "tokenizer.pkl": "888c9fa865c72c25f9c5e9467136a9cc8655253db459fb97481deb326681c629"
+ }
+}

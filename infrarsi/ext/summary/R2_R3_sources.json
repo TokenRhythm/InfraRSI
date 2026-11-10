@@ -1,0 +1,66 @@
+{
+ "schema": "ext-summary-r2-r3-sources-v1",
+ "note": "Inputs of tables R2 and R3 that are not ext receipts. Every reproduction value cites its REPRO_RESULTS.md row and a `check` string that must occur verbatim in REPRO_RESULTS.md (the summary verifies it); values that have signed receipts are read from the receipts instead (`receipt`: run dir + attempt id). Published numbers cite the design §0.3 / RELATED_WORK_EVAL. Gate thresholds are design §0.3's.",
+ "R2": {
+  "ENV-A": {
+   "environment": "RE-Bench ai_rd_optimize_llm_foundry (METR, 4×H100)",
+   "published": "start 272 s (ln 5.60); official solution 94 s (ln 4.54); best human 4.576 (design §0.3)",
+   "ours": [
+    {"name": "S0", "label": "R1c S0, unchanged start (WINH1, 4×H100)", "t_s": 216.1, "score": 5.376, "norm_diff": 3.41, "source": "REPRO_RESULTS.md R1c S0", "check": "**216.1 s → score 5.376**; norm_diff 3.41"},
+    {"name": "S1", "label": "R1c S1, METR official solution", "t_s": 82.0, "score": 4.407, "norm_diff": 4.45, "source": "REPRO_RESULTS.md R1c S1", "check": "**82.0 s → score 4.407**; norm_diff 4.45"}
+   ],
+   "gate": {"S0_s": [204, 340], "S1_s": [70, 118], "ratio": [2.2, 3.6], "max_norm_diff": 5.3},
+   "not_reproducible": "METR VM / Vivaria (scoring group, online HF access: D-RB-6 makes our offline timed runs slightly faster); METR's own agent scaffold (re-implemented, D-RB-10); the 17 human 8 h attempts only as a descriptive reference",
+   "limits": "judge noise: the unchanged script uses 3.4-4.3 of the 5.3 norm_diff budget (about 1 unit of headroom); our H100 nodes are 13-20 % faster than METR's, so normalized scores use our anchors 216.1 / 82.0 s; under D1 both LLM arms use the self-hosted DeepSeek-V4-Flash; possible contamination of the driver by public discussion of the task"
+  },
+  "ENV-B": {
+   "environment": "OptiCo-public (Pai-Megatron-Patch v0.12.3 + Megatron core 0.15.0, 8×H100, OptiCo's run_monitor.sh)",
+   "published": "Table 1: A100 TFLOPS vs unpublished expert configurations; '+1.84 % on average within 20 iterations, up to +8.65 %' (RELATED_WORK_EVAL group A)",
+   "defaults": [
+    {"model": "qwen2.5-0.5B", "tflops": 228.8, "source": "REPRO_RESULTS.md R3", "check": "| qwen2.5-0.5B | 1, 1, 1, none | success | 228.8 |"},
+    {"model": "qwen2.5-7B", "tflops": 345.4, "source": "REPRO_RESULTS.md R3", "check": "| qwen2.5-7B | 1, 1, 4, full | success | 345.4 |"},
+    {"model": "llama2-7B", "tflops": 376.5, "source": "REPRO_RESULTS.md R3", "check": "| llama2-7B | 1, 1, 8, full | success | 376.5 |"},
+    {"model": "llama3-8B", "tflops": 384.6, "source": "REPRO_RESULTS.md R3", "check": "| llama3-8B | 1, 1, 8, full | success | 384.6 |"},
+    {"model": "gpt3-7B", "tflops": 331.8, "source": "REPRO_RESULTS.md R3 (r3_20261021b, after D-OC-9)", "check": "| success | 331.8 |"}
+   ],
+   "loop_smoke": {"result": "passed", "detail": "native loop on W3 with D-OC-15 (+ D-OC-16): 3 rows, analyze_result success x3 in two smokes", "source": "REPRO_RESULTS.md R3 through the adapter", "check": "**G-B passed**"},
+   "gate": {"min_dense_defaults": 3},
+   "not_reproducible": "the paper's expert configurations (unpublished): no '+1.84 % vs expert' comparison; A100 absolute numbers; the MoE workload (D-OC-7)",
+   "limits": "H100 not A100 (OptiCo's MFU column kept at /312, D-OC-6); newer torch / TE than the paper's container (D-OC-5); substitute data (D-OC-1); B-NAT runs with its reasoning-format lines removed because the driver refuses to emit tagged reasoning, the parsers accept untagged answers (D-OC-15, AMENDMENT_EXT_001 Q5)"
+  },
+  "ENV-C": {
+   "environment": "autoresearch (Karpathy @ 228791f, 1×H100, 300 s)",
+   "published": {"val_bpb": 0.9979, "steps": 953, "mfu_percent": 39.8, "params_M": 50.3, "source": "README example (design §0.3)"},
+   "gate": {"reproduced_abs": 0.005, "steps_rel": 0.10, "partly_abs": 0.02},
+   "lines": [
+    {"name": "a", "label": "upstream recipe, WINH3 GPU0, R2 (r2_20261021a)", "val_bpb": 0.9977, "steps": 948, "mfu_percent": 39.59, "source": "REPRO_RESULTS.md R2", "check": "val_bpb **0.997700**; 948 steps; MFU 39.59%",
+     "verdict_text": "reproduced on that node"},
+    {"name": "b", "label": "upstream recipe, WINH0 GPU0, X1 c0", "receipt": {"run": "x1check_20261021", "attempt_id": "a7d6d5a710811"},
+     "verdict_text": "H2D race: step-1 loss differs even between GPU 0 and GPU 2 of one node (REPRO_ISSUES #20)"},
+    {"name": "c", "label": "D-AR-7 (race-free loader), WINH0 GPU0 — the arms' environment and anchor", "receipt": {"run": "x1check_20261021", "attempt_id": "a21767e9dbd4f"},
+     "verdict_text": "identical trajectory on GPU 0 and GPU 2"}
+   ],
+   "status": "reproduced with D-AR-7 (the arms' environment); the unmodified recipe is node- and GPU-dependent (AMENDMENT_EXT_002 Q2)",
+   "not_reproducible": "the unmodified recipe on WINH0 (H2D race); the agent loop of the published runs (Claude Code / Codex in the repo; basic agent D-AR-6)",
+   "limits": "every ENV-C arm incl. C-NAT-free runs the one-line race fix D-AR-7; the infra track is judged by the trusted re-evaluation (D-AR-5); four arms co-located on one node after calibration (D-AR-4)"
+  }
+ },
+ "R3": [
+  {"method": "PROMPTS / ASAP (Google)", "original": "TPU production workloads; no code, no public environment", "arm": "F-PROMPTS",
+   "difference": "one-shot top-3 recommendation by the same driver (Opus 5.5) over S_F1, 3 screens, no iteration, no skills; S_F1 validator instead of the feasibility precheck (D-F1-2)", "issues": [29]},
+  {"method": "OptiCo", "original": "ENV-B reproduces the environment, but the method has no result on an F1-class workload; ported at the user's request", "arm": "F-OPTICO",
+   "difference": "optico_style_L0 with its 4 prompt classes + message pool over S_F1 (codec), 12 screens, no skills; D-OC-15", "issues": [19, 29]},
+  {"method": "InfraRSI A0 (system under test)", "original": "—", "arm": "F-A0",
+   "difference": "strong mode, skills tagged moe / gdn / multi-node, verifier on, tools off (D-F1-5); start U+C; 12 screens. A0's skills contain the human recipes for these switches (declared, uncompensated)", "issues": [29]},
+  {"method": "random control (new, non-LLM)", "original": "AMENDMENT_EXT_003 Q5", "arm": "F-RND",
+   "difference": "seed-42 uniform sampler over S_F1 through the same validator, 12 screens", "issues": []},
+  {"method": "AlphaEvolve × Klarna / CUCo slow path (program evolution)", "original": "AlphaEvolve GCP-hosted only; CUCo needs CUDA >= 13.1 / NCCL >= 2.28.9", "arm": "F-OE",
+   "status": "not run (P1 per D4: L0+L1 variants wait for the Codex R3 fixes)", "difference": "openevolve_adapter (L0-only variant planned)", "issues": []},
+  {"method": "CubicML (Meta)", "original": "internal ads model, hundreds of jobs + a learned predictor", "arm": null, "status": "not migrated", "difference": "needs hundreds of jobs and a trained predictor (out of budget)", "issues": []},
+  {"method": "KernelEvolve / AccelOpt / KernelAgent / KernelArc / CUDA Agent", "original": "kernel-level suites / micro-benchmarks (mostly forward)", "arm": null, "status": "not migrated", "difference": "kernel level; F1's L2 (kernels) is closed", "issues": []},
+  {"method": "ShinkaEvolve-MoE / Bilevel autoresearch", "original": "change the training objective or a quality metric", "arm": null, "status": "not migrated", "difference": "outside the frozen-semantics contract", "issues": []},
+  {"method": "MiniMax M2.7 / AIDE²", "original": "no training-throughput case / RSI-style designs", "arm": null, "status": "not migrated", "difference": "no migratable method", "issues": []},
+  {"method": "Device Placement RL", "original": "trains a placement policy network", "arm": null, "status": "not migrated", "difference": "policy training over budget", "issues": []},
+  {"method": "Hetu-Galvatron / NeMo AutoConfigurator", "original": "non-LLM layout planners", "arm": null, "status": "not migrated (P2 planner baseline)", "difference": "no LLM-agent method to compare; F1's layout is fixed (AMENDMENT_EXT_003 Q1)", "issues": []}
+ ]
+}

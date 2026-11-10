@@ -1,0 +1,395 @@
+{
+ "schema": "flashnext-switch-space-v1",
+ "space_id": "S_F1",
+ "ruling": "AMENDMENT_EXT_003 Q1 (D-F1-2); corrected once by AMENDMENT_EXT_008 Q1 (qsa_dkdv_fastmask fixed at 0)",
+ "superseded_sha256": [
+  "ea48b5226ab558341f35c7942aa8d787cbe1adb99900c91ef9a48f4bdff94b77"
+ ],
+ "code_freeze_sha256": "d6a8f3b6b6c95e9013ffedcc58ddd62fb37708056ad75f013a72bcaf0c3fc826",
+ "start": {
+  "implementation_stack": "native_rollbacks",
+  "retain_attention_prefix": null,
+  "retain_expert_layers": null,
+  "qkv_subgroup": null,
+  "shared_master_guard": null,
+  "qsa_fwd_launch": null,
+  "qsa_dq_launch": null,
+  "qsa_dkdv_launch": null,
+  "qsa_dkdv_fastmask": null
+ },
+ "switches": [
+  {
+   "name": "implementation_stack",
+   "values": [
+    "native_rollbacks",
+    "production",
+    "production_qsa_memo_segsum",
+    "systems_policy"
+   ],
+   "start": "native_rollbacks",
+   "applies_to_stacks": [
+    "native_rollbacks",
+    "production",
+    "production_qsa_memo_segsum",
+    "systems_policy"
+   ],
+   "default_when_unset": null,
+   "description": "Which implementation stack runs the fixed layout; the other switches apply only where their stack reads them.",
+   "value_descriptions": {
+    "native_rollbacks": "native implementations for the token selector, sort, integer frontend, SwiGLU, fc1 weight-gradient and parameter sync",
+    "production": "the production implementations of those six components",
+    "production_qsa_memo_segsum": "the production implementations plus QSA fast-mask v1, a host-sync memo and the segmented-sum MoE combine",
+    "systems_policy": "the production implementations plus the replay / segmented-sum / QSA fast-mask v2 path, configured by the systems switches"
+   },
+   "domain": "family_transform.py:85-99; uc_contract.py; uc_transform.py:56-81; w_family_contract.py; w_family_runtime.py:93,102; systems_transform.py:6-25",
+   "provenance_not_for_task_views": {
+    "native_rollbacks": [
+     "U_plus_C"
+    ],
+    "production": [
+     "B"
+    ],
+    "production_qsa_memo_segsum": [
+     "W"
+    ],
+    "systems_policy": [
+     "S0",
+     "S_match",
+     "S_match_full",
+     "Q",
+     "Q_full",
+     "Qo",
+     "Qo_full"
+    ]
+   },
+   "status": {
+    "native_rollbacks": "registered recipe",
+    "production": "registered recipe",
+    "production_qsa_memo_segsum": "registered recipe",
+    "systems_policy": "registered recipe"
+   }
+  },
+  {
+   "name": "retain_attention_prefix",
+   "values": [
+    true,
+    false
+   ],
+   "start": null,
+   "applies_to_stacks": [
+    "systems_policy"
+   ],
+   "default_when_unset": null,
+   "description": "Whether the activations of the attention prefix of the 11 QSA layers (3, 7, ..., 43) are kept from the forward pass instead of being recomputed in the backward pass.",
+   "domain": "systems_policy.py:4,17-23 (11-layer prefix or none), :47-57 (counts)",
+   "provenance_not_for_task_views": {
+    "true": [
+     "S0",
+     "S_match",
+     "Q",
+     "Qo"
+    ],
+    "false": [
+     "S_match_full",
+     "Q_full",
+     "Qo_full"
+    ]
+   },
+   "status": {
+    "true": "registered recipe",
+    "false": "registered recipe"
+   }
+  },
+  {
+   "name": "retain_expert_layers",
+   "values": [
+    true,
+    false
+   ],
+   "start": null,
+   "applies_to_stacks": [
+    "systems_policy"
+   ],
+   "default_when_unset": null,
+   "description": "Whether the expert part of decoder layers 0 and 23 is kept from the forward pass instead of being replayed in the backward pass (requires retain_attention_prefix).",
+   "domain": "boundary_contract.py:30-36 (layers 0,23); native_full_accounting.py:15",
+   "provenance_not_for_task_views": {
+    "true": [
+     "S_match",
+     "Q",
+     "Qo"
+    ],
+    "false": [
+     "S0",
+     "S_match_full",
+     "Q_full",
+     "Qo_full"
+    ]
+   },
+   "status": {
+    "true": "registered recipe",
+    "false": "registered recipe"
+   }
+  },
+  {
+   "name": "qkv_subgroup",
+   "values": [
+    true,
+    false
+   ],
+   "start": null,
+   "applies_to_stacks": [
+    "systems_policy"
+   ],
+   "default_when_unset": null,
+   "description": "Whether the QKV projections run through the subgroup training path.",
+   "domain": "systems_runtime.py:58-62; systems_collection.py:49-54",
+   "provenance_not_for_task_views": {
+    "true": [
+     "S_match",
+     "S_match_full",
+     "Q",
+     "Q_full",
+     "Qo",
+     "Qo_full"
+    ],
+    "false": [
+     "S0"
+    ]
+   },
+   "status": {
+    "true": "registered recipe",
+    "false": "registered recipe"
+   }
+  },
+  {
+   "name": "shared_master_guard",
+   "values": [
+    true,
+    false
+   ],
+   "start": null,
+   "applies_to_stacks": [
+    "systems_policy"
+   ],
+   "default_when_unset": null,
+   "description": "Whether the master parameters are packed through the shared-master guard.",
+   "domain": "systems_runtime.py:31-33; systems_collection.py:55",
+   "provenance_not_for_task_views": {
+    "true": [
+     "S_match",
+     "S_match_full",
+     "Q",
+     "Q_full",
+     "Qo",
+     "Qo_full"
+    ],
+    "false": [
+     "S0"
+    ]
+   },
+   "status": {
+    "true": "registered recipe",
+    "false": "registered recipe"
+   }
+  },
+  {
+   "name": "qsa_fwd_launch",
+   "values": [
+    "4,1",
+    "4,2",
+    "8,2"
+   ],
+   "start": null,
+   "applies_to_stacks": [
+    "systems_policy",
+    "production_qsa_memo_segsum"
+   ],
+   "default_when_unset": "4,1",
+   "description": "Triton launch configuration \"num_warps,num_stages\" of the QSA block-sparse attention forward kernel.",
+   "domain": "flash_qsa_tuned_launch_v1.py:20-28 (any int pair); vendored launch :3-6",
+   "provenance_not_for_task_views": {
+    "4,1": [
+     "S0",
+     "S_match",
+     "S_match_full",
+     "W (default)"
+    ]
+   },
+   "status": {
+    "4,1": "registered recipe",
+    "4,2": "admitted by the E1 spike (bundle builds and CPU-materializes); GPU run unverified",
+    "8,2": "admitted by the E1 spike (bundle builds and CPU-materializes); GPU run unverified"
+   }
+  },
+  {
+   "name": "qsa_dq_launch",
+   "values": [
+    "4,2",
+    "4,1",
+    "8,1"
+   ],
+   "start": null,
+   "applies_to_stacks": [
+    "systems_policy",
+    "production_qsa_memo_segsum"
+   ],
+   "default_when_unset": "4,2",
+   "description": "Triton launch configuration \"num_warps,num_stages\" of the QSA block-sparse attention dQ kernel.",
+   "domain": "flash_qsa_tuned_launch_v1.py:20-28; vendored :3-6",
+   "provenance_not_for_task_views": {
+    "4,2": [
+     "S0",
+     "S_match",
+     "S_match_full",
+     "W (default)"
+    ]
+   },
+   "status": {
+    "4,2": "registered recipe",
+    "4,1": "admitted by the E1 spike (bundle builds and CPU-materializes); GPU run unverified",
+    "8,1": "admitted by the E1 spike (bundle builds and CPU-materializes); GPU run unverified"
+   }
+  },
+  {
+   "name": "qsa_dkdv_launch",
+   "values": [
+    "4,2",
+    "4,1",
+    "8,1"
+   ],
+   "start": null,
+   "applies_to_stacks": [
+    "systems_policy",
+    "production_qsa_memo_segsum"
+   ],
+   "default_when_unset": "4,2",
+   "description": "Triton launch configuration \"num_warps,num_stages\" of the QSA block-sparse attention dK/dV kernel.",
+   "domain": "flash_qsa_tuned_launch_v1.py:20-28; vendored :3-6",
+   "provenance_not_for_task_views": {
+    "4,2": [
+     "S0",
+     "S_match",
+     "S_match_full",
+     "W (default)"
+    ]
+   },
+   "status": {
+    "4,2": "registered recipe",
+    "4,1": "admitted by the E1 spike (bundle builds and CPU-materializes); GPU run unverified",
+    "8,1": "admitted by the E1 spike (bundle builds and CPU-materializes); GPU run unverified"
+   }
+  }
+ ],
+ "constraints": [
+  {
+   "id": "experts_need_prefix",
+   "rule": "retain_expert_layers=true requires retain_attention_prefix=true",
+   "source": "native_full_accounting.py:15 (asserted at construction, before the first update)"
+  }
+ ],
+ "fixed": {
+  "moment_policy": "native_fp32_v_offload",
+  "aux_readback_mode": "control",
+  "qsa_dkdv_fastmask": "0",
+  "seed": 42,
+  "run_limit": 30,
+  "flash_stop": 1024,
+  "layout": "TP8 / EP32 / CP1 / ETP1 / DP4, 2 micro-batches, seq 32768 (uc_contract.CONTRACT)",
+  "precision_arm": "bf16",
+  "data_order": "frozen_luna_q50_schedule_and_pack_plan_absolute_update_no_seed_reshuffle"
+ },
+ "excluded": [
+  "moment_policy scaled_fp16_dual_cuda / scaled_fp16_v_offload (lossy, E2)",
+  "FLASH_AUX_READBACK_MODE and every FLASH_* / NCCL variable outside the three families",
+  "layout, seed 43, run_limit, FLASH_STOP, data order, precision arm, allocator policy, LAUNCH_MATH",
+  "experts retained without the attention prefix (constraint)",
+  "qsa_dkdv_fastmask = '1' (AMENDMENT_EXT_008 Q1; 324 points of v1 removed, every systems_policy point with '1'): the frozen code asserts the dK/dV fast mask off before the first update - qsa_fastmask_training.py:17 'assert not tuned.DKDV_FAST' (systems_policy) and w_family_runtime.py:123 'assert not self.tuned.DKDV_FAST' (production_qsa_memo_segsum; also w_family_contract.py:21-22 FLAGS FLASH_QSA_DKDV_FASTMASK '0'); DKDV_FAST is read from FLASH_QSA_DKDV_FASTMASK at import, flash_qsa_fastmask_v2.py:44-46"
+ ],
+ "registered_points_not_for_task_views": {
+  "U_plus_C": {
+   "implementation_stack": "native_rollbacks",
+   "retain_attention_prefix": null,
+   "retain_expert_layers": null,
+   "qkv_subgroup": null,
+   "shared_master_guard": null,
+   "qsa_fwd_launch": null,
+   "qsa_dq_launch": null,
+   "qsa_dkdv_launch": null,
+   "qsa_dkdv_fastmask": null
+  },
+  "B": {
+   "implementation_stack": "production",
+   "retain_attention_prefix": null,
+   "retain_expert_layers": null,
+   "qkv_subgroup": null,
+   "shared_master_guard": null,
+   "qsa_fwd_launch": null,
+   "qsa_dq_launch": null,
+   "qsa_dkdv_launch": null,
+   "qsa_dkdv_fastmask": null
+  },
+  "W": {
+   "implementation_stack": "production_qsa_memo_segsum",
+   "retain_attention_prefix": null,
+   "retain_expert_layers": null,
+   "qkv_subgroup": null,
+   "shared_master_guard": null,
+   "qsa_fwd_launch": "4,1",
+   "qsa_dq_launch": "4,2",
+   "qsa_dkdv_launch": "4,2",
+   "qsa_dkdv_fastmask": null
+  },
+  "S0": {
+   "implementation_stack": "systems_policy",
+   "retain_attention_prefix": true,
+   "retain_expert_layers": false,
+   "qkv_subgroup": false,
+   "shared_master_guard": false,
+   "qsa_fwd_launch": "4,1",
+   "qsa_dq_launch": "4,2",
+   "qsa_dkdv_launch": "4,2",
+   "qsa_dkdv_fastmask": "0"
+  },
+  "S_match": {
+   "implementation_stack": "systems_policy",
+   "retain_attention_prefix": true,
+   "retain_expert_layers": true,
+   "qkv_subgroup": true,
+   "shared_master_guard": true,
+   "qsa_fwd_launch": "4,1",
+   "qsa_dq_launch": "4,2",
+   "qsa_dkdv_launch": "4,2",
+   "qsa_dkdv_fastmask": "0"
+  },
+  "S_match_full": {
+   "implementation_stack": "systems_policy",
+   "retain_attention_prefix": false,
+   "retain_expert_layers": false,
+   "qkv_subgroup": true,
+   "shared_master_guard": true,
+   "qsa_fwd_launch": "4,1",
+   "qsa_dq_launch": "4,2",
+   "qsa_dkdv_launch": "4,2",
+   "qsa_dkdv_fastmask": "0"
+  }
+ },
+ "size": {
+  "admissible_points": 353,
+  "by_stack": {
+   "native_rollbacks": 1,
+   "production": 1,
+   "production_qsa_memo_segsum": 27,
+   "systems_policy": 324
+  },
+  "systems_rows": 12
+ },
+ "task_view_fields": [
+  "name",
+  "values",
+  "applies_to_stacks",
+  "default_when_unset",
+  "description",
+  "value_descriptions"
+ ]
+}

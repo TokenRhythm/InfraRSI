@@ -1,0 +1,1162 @@
+{
+ "schema": "infrarsi-l0-schema-v1",
+ "backend": "megatron-core",
+ "backend_version": "0.18.2",
+ "source_root": "deliverables/WINH_ACCEL_CODEBASE_20261016/baseline/source_tree/qwen-sft/third_party/Megatron-LM-core_v0.18.2/megatron",
+ "verified": "2026-10-20: every maps_to.source line read in the vendored source; design EXPERIMENT_DESIGN_FABLE51.md section 1.8",
+ "fixed_by_task": {
+  "keys": [
+   "global_batch_size",
+   "seq_length",
+   "train_iters",
+   "moe_router_topk",
+   "moe_expert_capacity_factor",
+   "fp8",
+   "main_params_dtype",
+   "exp_avg_dtype",
+   "exp_avg_sq_dtype",
+   "use_precision_aware_optimizer",
+   "grad_reduce_in_fp32",
+   "virtual_pipeline_model_parallel_size",
+   "lr",
+   "clip_grad"
+  ],
+  "reason": "semantic or numeric items (design 1.8); fp32 grad reduce is a task constant (design 1.3/1.4); use_distributed_optimizer is an accepted L0 key whose only legal value is true"
+ },
+ "keys": {
+  "tensor_model_parallel_size": {
+   "type": "int",
+   "values": [
+    1,
+    2,
+    4,
+    8
+   ],
+   "default": 1,
+   "fr_v0": "smallest power of two that fits (probe 1->2->4->8)",
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "tensor_model_parallel_size",
+    "source": "core/model_parallel_config.py:20",
+    "declared": "int = 1"
+   },
+   "scope": "all",
+   "notes": "TP stays inside one NVLink node (<= GPUs per node); heads and query groups must divide (core/transformer/attention.py:334-347)"
+  },
+  "pipeline_model_parallel_size": {
+   "type": "int",
+   "values": [
+    1,
+    2,
+    4,
+    8
+   ],
+   "default": 1,
+   "fr_v0": 1,
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "pipeline_model_parallel_size",
+    "source": "core/model_parallel_config.py:28",
+    "declared": "int = 1"
+   },
+   "scope": "all",
+   "notes": "uniform layer split only (no custom layout or VPP in L0); num_layers % PP == 0; adapter must set pipeline_dtype=bf16 (model_parallel_config.py:422)"
+  },
+  "context_parallel_size": {
+   "type": "int",
+   "values": [
+    1,
+    2,
+    4,
+    8
+   ],
+   "default": 1,
+   "fr_v0": 1,
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "context_parallel_size",
+    "source": "core/model_parallel_config.py:45",
+    "declared": "int = 1"
+   },
+   "scope": "all",
+   "notes": "SFT tasks (data D-SFT-*): packed segments are padded to multiples of 8 tokens, so CP must be in {1, 2, 4}; PT tasks (D-PT-*) allow any CP the layout admits"
+  },
+  "expert_model_parallel_size": {
+   "type": "int",
+   "values": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32
+   ],
+   "default": 1,
+   "fr_v0": "min(num_experts, 8) for MoE, 1 for dense",
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "expert_model_parallel_size",
+    "source": "core/model_parallel_config.py:72",
+    "declared": "int = 1"
+   },
+   "scope": "moe",
+   "notes": "num_moe_experts % EP == 0 (core/transformer/moe/moe_layer.py:185); world % (ETP*EP*PP) == 0 (core/parallel_state.py:787)"
+  },
+  "expert_tensor_parallel_size": {
+   "type": "int",
+   "values": [
+    1,
+    2,
+    4,
+    8
+   ],
+   "nullable": true,
+   "default": null,
+   "fr_v0": 1,
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "expert_tensor_parallel_size",
+    "source": "core/model_parallel_config.py:75",
+    "declared": "Optional[int] = None (None -> TP, model_parallel_config.py:419)"
+   },
+   "scope": "moe",
+   "notes": "null means 'same as TP'"
+  },
+  "sequence_parallel": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": "TP > 1",
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "sequence_parallel",
+    "source": "core/model_parallel_config.py:39",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "requires TP > 1 (model_parallel_config.py:415); recommended with EP>1 and TP>1 (model_parallel_config.py:455)"
+  },
+  "micro_batch_size": {
+   "type": "int",
+   "values": [
+    1,
+    2,
+    4,
+    8
+   ],
+   "default": 1,
+   "fr_v0": 1,
+   "maps_to": {
+    "object": "forward_backward_func call (adapter data iterator)",
+    "field": "micro_batch_size / num_microbatches",
+    "source": "core/pipeline_parallel/schedules.py:600-606",
+    "declared": "micro_batch_size: int (unused for PP=1; the iterator yields MBS packs per micro-batch)"
+   },
+   "scope": "all",
+   "notes": "GA = packs_per_update / (DP * MBS) must be an integer; GBS is a task constant"
+  },
+  "recompute_granularity": {
+   "type": "enum",
+   "values": [
+    null,
+    "full",
+    "selective"
+   ],
+   "default": null,
+   "fr_v0": "full",
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "recompute_granularity",
+    "source": "core/transformer/transformer_config.py:472",
+    "declared": "Optional[Literal['full', 'selective']] = None"
+   },
+   "scope": "all",
+   "notes": "full needs method and num_layers; selective forbids num_layers (transformer_config.py:1544-1575)"
+  },
+  "recompute_method": {
+   "type": "enum",
+   "values": [
+    null,
+    "uniform",
+    "block"
+   ],
+   "default": null,
+   "fr_v0": "uniform",
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "recompute_method",
+    "source": "core/transformer/transformer_config.py:483",
+    "declared": "Optional[Literal['uniform', 'block']] = None"
+   },
+   "scope": "all",
+   "notes": "only with granularity=full in L0"
+  },
+  "recompute_num_layers": {
+   "type": "int",
+   "range": [
+    1,
+    128
+   ],
+   "nullable": true,
+   "default": null,
+   "fr_v0": 1,
+   "search_values": [
+    null,
+    1,
+    2,
+    4,
+    8
+   ],
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "recompute_num_layers",
+    "source": "core/transformer/transformer_config.py:491",
+    "declared": "Optional[int] = None"
+   },
+   "scope": "all",
+   "notes": "uniform: layers per recompute unit; block: recomputed layers per PP stage; <= num_layers/PP"
+  },
+  "recompute_modules": {
+   "type": "list_enum",
+   "values": [
+    "core_attn",
+    "moe_act",
+    "layernorm",
+    "mla_up_proj",
+    "mlp",
+    "moe",
+    "shared_experts"
+   ],
+   "nullable": true,
+   "default": null,
+   "fr_v0": null,
+   "search_values": [
+    null,
+    [
+     "core_attn"
+    ],
+    [
+     "layernorm"
+    ],
+    [
+     "mlp"
+    ],
+    [
+     "core_attn",
+     "mlp"
+    ],
+    [
+     "moe_act"
+    ],
+    [
+     "moe"
+    ],
+    [
+     "core_attn",
+     "moe_act"
+    ],
+    [
+     "layernorm",
+     "moe_act"
+    ]
+   ],
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "recompute_modules",
+    "source": "core/transformer/transformer_config.py:500",
+    "declared": "Optional[List[str]] = None (None -> ['core_attn'], transformer_config.py:1583)"
+   },
+   "scope": "all",
+   "notes": "selective only; moe_act needs moe_grouped_gemm (1603); mla_up_proj needs MLA (1608); moe/moe_act/shared_experts MoE only"
+  },
+  "moe_layer_recompute": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "moe_layer_recompute",
+    "source": "core/transformer/transformer_config.py:831",
+    "declared": "bool = False"
+   },
+   "scope": "moe",
+   "notes": "deprecated alias: sets selective + 'moe' module; rejected with full granularity (transformer_config.py:1645-1656)"
+  },
+  "cpu_offloading": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "cpu_offloading",
+    "source": "core/model_parallel_config.py:371",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "activation offload; needs PP=1 and no recompute (transformer_config.py:1534-1543)"
+  },
+  "cpu_offloading_num_layers": {
+   "type": "int",
+   "range": [
+    0,
+    127
+   ],
+   "default": 0,
+   "fr_v0": 0,
+   "search_values": [
+    0,
+    1,
+    2,
+    4,
+    8
+   ],
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "cpu_offloading_num_layers",
+    "source": "core/model_parallel_config.py:374",
+    "declared": "int = 0"
+   },
+   "scope": "all",
+   "notes": "0 <= n < num_layers when cpu_offloading (transformer_config.py:1527)"
+  },
+  "optimizer_cpu_offload": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": "false; true after TP=8 OOM",
+   "maps_to": {
+    "object": "OptimizerConfig",
+    "field": "optimizer_cpu_offload",
+    "source": "core/optimizer/optimizer_config.py:344",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "HybridDeviceOptimizer (core/optimizer/__init__.py:502-543); Megatron-LM pairs it with use_precision_aware_optimizer (training/arguments.py:1671), which the adapter must set with fp32 master/moments"
+  },
+  "optimizer_offload_fraction": {
+   "type": "float",
+   "range": [
+    0.0,
+    1.0
+   ],
+   "default": 0.0,
+   "fr_v0": "1.0 when offloading",
+   "search_values": [
+    0.0,
+    0.25,
+    0.5,
+    0.75,
+    1.0
+   ],
+   "maps_to": {
+    "object": "OptimizerConfig",
+    "field": "optimizer_offload_fraction",
+    "source": "core/optimizer/optimizer_config.py:347",
+    "declared": "float = 0.0"
+   },
+   "scope": "offload",
+   "notes": "fraction of optimizer state on CPU"
+  },
+  "overlap_cpu_optimizer_d2h_h2d": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "OptimizerConfig",
+    "field": "overlap_cpu_optimizer_d2h_h2d",
+    "source": "core/optimizer/optimizer_config.py:353",
+    "declared": "bool = False"
+   },
+   "scope": "offload",
+   "notes": "overlaps CPU Adam with D2H/H2D copies"
+  },
+  "use_distributed_optimizer": {
+   "type": "bool",
+   "values": [
+    true
+   ],
+   "default": true,
+   "fr_v0": true,
+   "maps_to": {
+    "object": "DistributedDataParallelConfig",
+    "field": "use_distributed_optimizer",
+    "source": "core/distributed/distributed_data_parallel_config.py:29",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "task constant (design 1.3/1.4): only true is legal. Accepted so FR/ED planner configs may state it; the adapter always builds the distributed optimizer (also OptimizerConfig.use_distributed_optimizer, core/optimizer/optimizer_config.py:321). Not a search dimension."
+  },
+  "pin_cpu_grads": {
+   "type": "bool",
+   "default": true,
+   "fr_v0": true,
+   "maps_to": {
+    "object": "OptimizerConfig",
+    "field": "pin_cpu_grads",
+    "source": "core/optimizer/optimizer_config.py:362",
+    "declared": "bool = True"
+   },
+   "scope": "offload",
+   "notes": "pinned host gradients"
+  },
+  "pin_cpu_params": {
+   "type": "bool",
+   "default": true,
+   "fr_v0": true,
+   "maps_to": {
+    "object": "OptimizerConfig",
+    "field": "pin_cpu_params",
+    "source": "core/optimizer/optimizer_config.py:365",
+    "declared": "bool = True"
+   },
+   "scope": "offload",
+   "notes": "pinned host parameters"
+  },
+  "overlap_grad_reduce": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "DistributedDataParallelConfig",
+    "field": "overlap_grad_reduce",
+    "source": "core/distributed/distributed_data_parallel_config.py:18",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "overlap grad reduce-scatter with backward"
+  },
+  "overlap_param_gather": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "DistributedDataParallelConfig",
+    "field": "overlap_param_gather",
+    "source": "core/distributed/distributed_data_parallel_config.py:21",
+    "declared": "bool = False (mirrored in OptimizerConfig, core/optimizer/optimizer_config.py:330)"
+   },
+   "scope": "all",
+   "notes": "needs overlap_grad_reduce and the distributed optimizer (training/arguments.py:1003-1008)"
+  },
+  "align_param_gather": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "DistributedDataParallelConfig",
+    "field": "align_param_gather",
+    "source": "core/distributed/distributed_data_parallel_config.py:24",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "only effective with interleaved PP; Megatron-LM resets it to False otherwise (training/arguments.py:992)"
+  },
+  "bucket_size": {
+   "type": "int",
+   "range": [
+    1000000,
+    1000000000
+   ],
+   "nullable": true,
+   "default": null,
+   "fr_v0": null,
+   "search_values": [
+    null,
+    10000000,
+    20000000,
+    40000000,
+    80000000,
+    160000000
+   ],
+   "maps_to": {
+    "object": "DistributedDataParallelConfig",
+    "field": "bucket_size",
+    "source": "core/distributed/distributed_data_parallel_config.py:48",
+    "declared": "Optional[int] = None (max(4e7, 1e6*dp))"
+   },
+   "scope": "all",
+   "notes": "parameters per DP bucket"
+  },
+  "average_in_collective": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "DistributedDataParallelConfig",
+    "field": "average_in_collective",
+    "source": "core/distributed/distributed_data_parallel_config.py:74",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "only false is legal here: Megatron-Core asserts not average_in_collective under calculate_per_token_loss (core/distributed/distributed_data_parallel.py:169-172), which the frozen objective uses (C22); kept for the design key list"
+  },
+  "delay_wgrad_compute": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "delay_wgrad_compute",
+    "source": "core/model_parallel_config.py:261",
+    "declared": "bool = False (also DistributedDataParallelConfig, core/distributed/distributed_data_parallel_config.py:182)"
+   },
+   "scope": "moe",
+   "notes": "requires overlap_moe_expert_parallel_comm (core/transformer/transformer_config.py:2454)"
+  },
+  "tp_comm_overlap": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "tp_comm_overlap",
+    "source": "core/model_parallel_config.py:178",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "requires sequence_parallel (training/arguments.py:1386) and TE userbuffers initialised by the adapter"
+  },
+  "cp_comm_type": {
+   "type": "enum",
+   "values": [
+    null,
+    "p2p",
+    "all_gather",
+    "a2a"
+   ],
+   "default": null,
+   "fr_v0": null,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "cp_comm_type",
+    "source": "core/transformer/transformer_config.py:884",
+    "declared": "Optional[Union[str, List[str]]] = None"
+   },
+   "scope": "cp",
+   "notes": "only with CP > 1; 'a2a+p2p' excluded (needs hierarchical_context_parallel_sizes, not in L0); per-layer lists excluded"
+  },
+  "moe_token_dispatcher_type": {
+   "type": "enum",
+   "values": [
+    "allgather",
+    "alltoall",
+    "flex"
+   ],
+   "default": "allgather",
+   "fr_v0": "alltoall",
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "moe_token_dispatcher_type",
+    "source": "core/transformer/transformer_config.py:792",
+    "declared": "Literal['allgather', 'alltoall', 'flex'] = 'allgather'"
+   },
+   "scope": "moe",
+   "notes": "flex uses the DeepEP backend by default (transformer_config.py:1440-1458); DeepEP import failure is a failed screen (design risk 16)"
+  },
+  "moe_enable_deepep": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "moe_enable_deepep",
+    "source": "core/transformer/transformer_config.py:796",
+    "declared": "bool = False"
+   },
+   "scope": "moe",
+   "notes": "requires flex dispatcher (transformer_config.py:1441)"
+  },
+  "moe_deepep_num_sms": {
+   "type": "int",
+   "values": [
+    8,
+    12,
+    16,
+    20,
+    24,
+    32
+   ],
+   "default": 20,
+   "fr_v0": 20,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "moe_deepep_num_sms",
+    "source": "core/transformer/transformer_config.py:848",
+    "declared": "int = 20"
+   },
+   "scope": "moe",
+   "notes": "DeepEP requires an even SM count (flash-next code/vendor/DeepEP-fp32-combine/deep_ep/buffer.py:138)"
+  },
+  "moe_grouped_gemm": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": true,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "moe_grouped_gemm",
+    "source": "core/transformer/transformer_config.py:760",
+    "declared": "bool = False"
+   },
+   "scope": "moe",
+   "notes": "FR uses true (Megatron-LM MoE README quick start = FD)"
+  },
+  "moe_permute_fusion": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "moe_permute_fusion",
+    "source": "core/transformer/transformer_config.py:834",
+    "declared": "bool = False"
+   },
+   "scope": "moe",
+   "notes": "needs TE >= 2.1 fused permute (transformer_config.py:2381-2397); TE 2.16 on WINH"
+  },
+  "moe_shared_expert_overlap": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "moe_shared_expert_overlap",
+    "source": "core/transformer/transformer_config.py:648",
+    "declared": "bool = False"
+   },
+   "scope": "moe",
+   "notes": "only with shared experts and alltoall/flex dispatcher (transformer_config.py:1467)"
+  },
+  "overlap_moe_expert_parallel_comm": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "overlap_moe_expert_parallel_comm",
+    "source": "core/model_parallel_config.py:256",
+    "declared": "bool = False"
+   },
+   "scope": "moe",
+   "notes": "EP>1, alltoall/flex, no full recompute, no 'moe' recompute, no shared-expert overlap, PP=1 without VPP (transformer_config.py:2399-2441)"
+  },
+  "apply_rope_fusion": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "apply_rope_fusion",
+    "source": "core/transformer/transformer_config.py:453",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "MLA needs YaRN RoPE for fusion (transformer_config.py:2637)"
+  },
+  "bias_activation_fusion": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "bias_activation_fusion",
+    "source": "core/transformer/transformer_config.py:436",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "gelu/swiglu/quick_geglu only (transformer_config.py:1890-1920)"
+  },
+  "masked_softmax_fusion": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "masked_softmax_fusion",
+    "source": "core/transformer/transformer_config.py:439",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "affects the unfused attention path only"
+  },
+  "gradient_accumulation_fusion": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "gradient_accumulation_fusion",
+    "source": "core/model_parallel_config.py:163",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "wgrad accumulated into fp32 main_grad inside the GEMM (TE linears or fused_weight_gradient_mlp_cuda, core/tensor_parallel/layers.py:48)"
+  },
+  "cross_entropy_loss_fusion": {
+   "type": "bool",
+   "default": false,
+   "fr_v0": false,
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "cross_entropy_loss_fusion",
+    "source": "core/model_parallel_config.py:233",
+    "declared": "bool = False"
+   },
+   "scope": "all",
+   "notes": "with impl 'te' rejected by Megatron-LM (training/arguments.py:1529)"
+  },
+  "cross_entropy_fusion_impl": {
+   "type": "enum",
+   "values": [
+    "native",
+    "te"
+   ],
+   "default": "native",
+   "fr_v0": "native",
+   "maps_to": {
+    "object": "ModelParallelConfig",
+    "field": "cross_entropy_fusion_impl",
+    "source": "core/model_parallel_config.py:238",
+    "declared": "Literal['native', 'te'] = 'native'"
+   },
+   "scope": "all",
+   "notes": "'te' only legal while cross_entropy_loss_fusion is false (where it has no effect)"
+  },
+  "attention_backend": {
+   "type": "enum",
+   "values": [
+    "auto",
+    "flash",
+    "fused",
+    "unfused"
+   ],
+   "default": "auto",
+   "fr_v0": "auto",
+   "maps_to": {
+    "object": "TransformerConfig",
+    "field": "attention_backend",
+    "source": "core/transformer/transformer_config.py:138",
+    "declared": "AttnBackend = AttnBackend.auto (enum core/transformer/enums.py:51: flash, fused, unfused, local, auto)"
+   },
+   "scope": "all",
+   "notes": "'local' excluded: the bridge builds TE layer specs"
+  }
+ },
+ "env": {
+  "PYTORCH_CUDA_ALLOC_CONF": {
+   "type": "alloc_conf",
+   "options": {
+    "expandable_segments": {
+     "type": "enum",
+     "values": [
+      "True",
+      "False"
+     ]
+    },
+    "max_split_size_mb": {
+     "type": "int",
+     "range": [
+      20,
+      1048576
+     ]
+    },
+    "garbage_collection_threshold": {
+     "type": "float",
+     "range": [
+      0.01,
+      0.99
+     ]
+    },
+    "roundup_power2_divisions": {
+     "type": "enum",
+     "values": [
+      "1",
+      "2",
+      "4",
+      "8",
+      "16"
+     ]
+    },
+    "pinned_use_cuda_host_register": {
+     "type": "enum",
+     "values": [
+      "True",
+      "False"
+     ]
+    },
+    "pinned_num_register_threads": {
+     "type": "enum",
+     "values": [
+      "1",
+      "2",
+      "4",
+      "8",
+      "16",
+      "32",
+      "64",
+      "128"
+     ]
+    }
+   },
+   "search_values": [
+    null,
+    "expandable_segments:True",
+    "expandable_segments:True,garbage_collection_threshold:0.8",
+    "max_split_size_mb:512"
+   ],
+   "notes": "backend:cudaMallocAsync is excluded because torch memory statistics (peak reserved) are not comparable under it"
+  },
+  "CUDA_DEVICE_MAX_CONNECTIONS": {
+   "type": "int",
+   "range": [
+    1,
+    32
+   ],
+   "search_values": [
+    1,
+    8,
+    32
+   ],
+   "notes": "1 orders TP/SP comm before compute (core/tensor_parallel/layers.py:747-760); FR uses 1"
+  },
+  "OMP_NUM_THREADS": {
+   "type": "int",
+   "range": [
+    1,
+    64
+   ],
+   "search_values": [
+    null,
+    4,
+    8,
+    16
+   ],
+   "notes": "host threads per rank; matters for CPU Adam offload"
+  },
+  "NCCL_ALGO": {
+   "type": "str_list",
+   "values": [
+    "Ring",
+    "Tree",
+    "CollnetDirect",
+    "CollnetChain",
+    "NVLS",
+    "NVLSTree",
+    "PAT"
+   ],
+   "search_values": [
+    null,
+    "Ring",
+    "Tree",
+    "NVLS"
+   ]
+  },
+  "NCCL_PROTO": {
+   "type": "str_list",
+   "values": [
+    "LL",
+    "LL128",
+    "Simple"
+   ],
+   "search_values": [
+    null,
+    "Simple",
+    "LL128"
+   ]
+  },
+  "NCCL_MIN_NCHANNELS": {
+   "type": "int",
+   "range": [
+    1,
+    64
+   ],
+   "search_values": [
+    null,
+    4,
+    16,
+    32
+   ]
+  },
+  "NCCL_MAX_NCHANNELS": {
+   "type": "int",
+   "range": [
+    1,
+    64
+   ],
+   "search_values": [
+    null,
+    8,
+    16,
+    32
+   ]
+  },
+  "NCCL_MIN_CTAS": {
+   "type": "int",
+   "range": [
+    1,
+    64
+   ]
+  },
+  "NCCL_MAX_CTAS": {
+   "type": "int",
+   "range": [
+    1,
+    64
+   ]
+  },
+  "NCCL_NCHANNELS_PER_NET_PEER": {
+   "type": "int",
+   "range": [
+    1,
+    32
+   ]
+  },
+  "NCCL_BUFFSIZE": {
+   "type": "int",
+   "range": [
+    1048576,
+    67108864
+   ],
+   "search_values": [
+    null,
+    4194304,
+    8388608,
+    16777216
+   ]
+  },
+  "NCCL_NTHREADS": {
+   "type": "enum",
+   "values": [
+    "64",
+    "128",
+    "256",
+    "512"
+   ]
+  },
+  "NCCL_P2P_LEVEL": {
+   "type": "enum",
+   "values": [
+    "LOC",
+    "NVL",
+    "PIX",
+    "PXB",
+    "PHB",
+    "SYS"
+   ]
+  },
+  "NCCL_NET_GDR_LEVEL": {
+   "type": "enum",
+   "values": [
+    "LOC",
+    "PIX",
+    "PXB",
+    "PHB",
+    "SYS"
+   ]
+  },
+  "NCCL_NET_GDR_READ": {
+   "type": "enum",
+   "values": [
+    "0",
+    "1"
+   ]
+  },
+  "NCCL_IB_QPS_PER_CONNECTION": {
+   "type": "int",
+   "range": [
+    1,
+    8
+   ]
+  },
+  "NCCL_IB_SPLIT_DATA_ON_QPS": {
+   "type": "enum",
+   "values": [
+    "0",
+    "1"
+   ]
+  },
+  "NCCL_CROSS_NIC": {
+   "type": "enum",
+   "values": [
+    "0",
+    "1",
+    "2"
+   ]
+  },
+  "NCCL_NVLS_ENABLE": {
+   "type": "enum",
+   "values": [
+    "0",
+    "1"
+   ],
+   "search_values": [
+    null,
+    "0",
+    "1"
+   ]
+  },
+  "NCCL_CUMEM_ENABLE": {
+   "type": "enum",
+   "values": [
+    "0",
+    "1"
+   ]
+  },
+  "NCCL_P2P_NET_CHUNKSIZE": {
+   "type": "int",
+   "range": [
+    65536,
+    8388608
+   ]
+  },
+  "NCCL_P2P_NVL_CHUNKSIZE": {
+   "type": "int",
+   "range": [
+    65536,
+    8388608
+   ]
+  },
+  "NCCL_SOCKET_NTHREADS": {
+   "type": "int",
+   "range": [
+    1,
+    16
+   ]
+  },
+  "NCCL_NSOCKS_PERTHREAD": {
+   "type": "int",
+   "range": [
+    1,
+    16
+   ]
+  }
+ },
+ "env_excluded": {
+  "keys": [
+   "NCCL_DEBUG",
+   "NCCL_DEBUG_SUBSYS",
+   "NCCL_SOCKET_IFNAME",
+   "NCCL_IB_HCA",
+   "NCCL_IB_DISABLE",
+   "NCCL_P2P_DISABLE",
+   "NCCL_SHM_DISABLE",
+   "NCCL_TIMEOUT",
+   "NCCL_ASYNC_ERROR_HANDLING",
+   "TORCH_NCCL_*",
+   "NVTE_*",
+   "CUDA_VISIBLE_DEVICES",
+   "PYTHONPATH",
+   "USE_MCORE_GDN"
+  ],
+  "reason": "topology/bootstrap selection, logging, error handling, kernel-path or launch identity: owned by discover/harness, not performance actions"
+ },
+ "constraints": [
+  {
+   "id": "C01",
+   "text": "sequence_parallel requires TP > 1",
+   "source": "core/model_parallel_config.py:415"
+  },
+  {
+   "id": "C02",
+   "text": "tp_comm_overlap requires sequence_parallel",
+   "source": "training/arguments.py:1386"
+  },
+  {
+   "id": "C03",
+   "text": "full recompute needs method in {uniform, block} and num_layers >= 1; selective forbids num_layers (and method in L0)",
+   "source": "core/transformer/transformer_config.py:1544-1575"
+  },
+  {
+   "id": "C04",
+   "text": "recompute_modules only with selective; allowed set; moe_act needs grouped GEMM; mla_up_proj needs MLA",
+   "source": "core/transformer/transformer_config.py:1586-1612"
+  },
+  {
+   "id": "C05",
+   "text": "moe_layer_recompute is rejected with full granularity",
+   "source": "core/transformer/transformer_config.py:1645-1651"
+  },
+  {
+   "id": "C06",
+   "text": "cpu_offloading needs 0 <= num_layers < model layers, PP == 1 and no recompute",
+   "source": "core/transformer/transformer_config.py:1527-1543"
+  },
+  {
+   "id": "C07",
+   "text": "overlap_param_gather requires overlap_grad_reduce (distributed optimizer is a task constant)",
+   "source": "training/arguments.py:1003-1008"
+  },
+  {
+   "id": "C08",
+   "text": "moe_enable_deepep requires the flex dispatcher",
+   "source": "core/transformer/transformer_config.py:1440-1442"
+  },
+  {
+   "id": "C09",
+   "text": "moe_shared_expert_overlap requires alltoall or flex",
+   "source": "core/transformer/transformer_config.py:1467-1473"
+  },
+  {
+   "id": "C10",
+   "text": "overlap_moe_expert_parallel_comm: EP>1, alltoall/flex, recompute not full, no recompute method/num_layers, no 'moe' recompute, no shared-expert overlap, PP == 1 (VPP not in L0)",
+   "source": "core/transformer/transformer_config.py:2399-2441"
+  },
+  {
+   "id": "C11",
+   "text": "delay_wgrad_compute requires overlap_moe_expert_parallel_comm",
+   "source": "core/transformer/transformer_config.py:2454-2457"
+  },
+  {
+   "id": "C12",
+   "text": "cross_entropy_loss_fusion with impl 'te' is rejected",
+   "source": "training/arguments.py:1529-1534"
+  },
+  {
+   "id": "C13",
+   "text": "world % (TP*PP*CP) == 0 and world % (ETP*EP*PP) == 0",
+   "source": "core/parallel_state.py:735,787"
+  },
+  {
+   "id": "C14",
+   "text": "packs_per_update % (DP*MBS) == 0 (integer GA, fixed GBS)",
+   "source": "INTERFACES.md 4b update_assignment"
+  },
+  {
+   "id": "C15",
+   "text": "TP <= GPUs per node and divides it (TP inside NVLink)",
+   "source": "design 1.5 rule"
+  },
+  {
+   "id": "C16",
+   "text": "attention heads % TP == 0; query groups % TP == 0, or TP % query groups == 0 when groups < TP",
+   "source": "core/transformer/attention.py:331-347"
+  },
+  {
+   "id": "C17",
+   "text": "num_experts % EP == 0; dense models need EP == 1",
+   "source": "core/transformer/moe/moe_layer.py:185"
+  },
+  {
+   "id": "C18",
+   "text": "num_layers % PP == 0 (uniform split); full recompute num_layers <= num_layers/PP",
+   "source": "core/transformer/transformer_config.py:1562-1567"
+  },
+  {
+   "id": "C19",
+   "text": "SFT tasks (data D-SFT-*) need CP in {1, 2, 4} (segments padded to multiples of 8; rejected before any screen); seq_len % (2*CP) == 0; cp_comm_type only with CP > 1",
+   "source": "core/transformer/transformer_config.py:2483; design 1.2; data contract (coordinator 2026-10-20)"
+  },
+  {
+   "id": "C20",
+   "text": "moe_deepep_num_sms must be even",
+   "source": "flash-next code/vendor/DeepEP-fp32-combine/deep_ep/buffer.py:138"
+  },
+  {
+   "id": "C21",
+   "text": "MoE-only keys have no effect on dense models (warning); samplers skip them",
+   "source": "design 1.8"
+  },
+  {
+   "id": "C22",
+   "text": "average_in_collective must be false (per-token loss)",
+   "source": "core/distributed/distributed_data_parallel.py:169-172"
+  }
+ ]
+}

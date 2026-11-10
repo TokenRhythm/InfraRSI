@@ -1,0 +1,120 @@
+# Where a mechanism takes its time from (textbook design P0-2, FABLE_DESIGN_CHECK section 3).
+#
+# timers: the class of each step timer a framework logs. Megatron (--timing-log-level 1; level 2 adds the compute and
+#   pipeline timers): every value is the maximum over the ranks, in ms; forward-backward wraps forward-compute,
+#   backward-compute, batch-generator and the pipeline send / recv, optimizer wraps the optimizer-* timers, and
+#   all-grads-sync is the gradient reduction left exposed (with --overlap-grad-reduce: only its wait). The partition of
+#   an update is signals.MEGATRON_TOP (forward-backward stops after the gradient sync, so all-grads-sync is nested in
+#   it). Classes: compute, comm (exposed communication), optimizer, data, residual (GPU-idle time, measured only by
+#   a profile run).
+# names: the class of a phase another framework logs (signals.phases), by a word in its name (lower case, `_` and
+#   spaces read as `-`); the first class with a match wins.
+# mechanisms: the phase classes a mechanism can shorten. `all` = any phase (layout, precision, recompute, sharding and
+#   anything not certain); `residual` = host-side work outside the timed phases. A change reaching several classes gets
+#   their union; a mechanism not listed here has no phase target. Host-side work (input, GC, NaN checks, launch
+#   queues) also stretches the timed phases it happens in, so such mechanisms are `all`, never `residual` alone; a
+#   set narrower than the truth would cap a real gain (P0-2 step 2), so when in doubt: `all`.
+timers:
+  megatron:
+    forward-backward: compute
+    forward-compute: compute
+    backward-compute: compute
+    batch-generator: data
+    forward-recv: comm
+    forward-send: comm
+    backward-recv: comm
+    backward-send: comm
+    forward-send-forward-recv: comm
+    forward-send-backward-recv: comm
+    backward-send-forward-recv: comm
+    backward-send-backward-recv: comm
+    forward-backward-send-forward-backward-recv: comm
+    layernorm-grads-all-reduce: comm
+    embedding-grads-all-reduce: comm
+    all-grads-sync: comm
+    params-all-gather: comm
+    optimizer-copy-to-main-grad: optimizer
+    optimizer-unscale-and-check-inf: optimizer
+    optimizer-clip-main-grad: optimizer
+    optimizer-count-zeros: optimizer
+    optimizer-inner-step: optimizer
+    optimizer-copy-main-to-model-params: optimizer
+    optimizer: optimizer
+names:
+  comm: [all-reduce, allreduce, all-gather, allgather, reduce-scatter, reducescatter, all2all, alltoall, sync, comm, nccl,
+         send, recv]
+  optimizer: [opt]
+  data: [data, batch, load, dataloader, input]
+  compute: [forward, backward, fwd, bwd, compute, model, step]
+mechanisms:
+  tp: all
+  pp: all
+  cp: all
+  ep: all
+  etp: all
+  micro_batch: all
+  precision: all
+  bf16_main_grads: all            # optimizer copies, reduce-scatter bytes and the backward's gradient writes (H1: +4.3 %)
+  precision_aware_optimizer: [optimizer]
+  recompute: all
+  moe_layer_recompute: all
+  recompute_impl: all
+  recompute_offload: all
+  attention_backend: [compute]
+  fused_cross_entropy: [compute]
+  cross_entropy_fusion_impl: [compute]
+  loss_impl: [compute]
+  compile: [compute]
+  tf32: [compute]
+  cudnn_benchmark: [compute]
+  fp8_attention: [compute]
+  fp8_frozen_weights: [compute]
+  moe_grouped_gemm: [compute]
+  moe_permute_fusion: [compute]
+  moe_float8_grouped_mm: [compute]
+  moe_dispatcher: [compute]       # the token all-to-all runs inside forward-backward
+  gradient_accumulation_fusion: [compute]
+  tp_comm_overlap: [compute]      # tensor-parallel collectives run inside forward-backward
+  sequence_parallel: all
+  cp_comm: [compute]
+  cp_rotate: [compute]
+  vae_precision: [compute]
+  latent_cache: [data, compute]
+  text_embed_cache: [data, compute]
+  nvls: [comm, compute]
+  nccl_sockets: [comm, compute]
+  dp_grad_overlap: [comm]
+  dp_param_gather_overlap: all     # without overlap the gather runs inside the optimizer timer
+  ddp_average_in_collective: [comm]
+  ddp_static_graph: [comm, compute]
+  ddp_bucket_mb: [comm, compute]
+  grad_as_bucket_view: [comm, compute]
+  grad_reduce_bf16: [comm, compute]   # fewer bytes: also less interference with the backward it overlaps
+  fp8_param_gather: all
+  grad_sync_every_micro: [comm, compute]
+  zero_hpz: all
+  avoid_record_streams: all
+  distributed_optimizer: all
+  zero_stage: all
+  cpu_offload: all
+  model_offload: all
+  megatron_fsdp: all
+  fsdp_sharding: all
+  fsdp_version: all
+  hsdp: all
+  reshard_after_forward: all
+  virtual_pipeline: all
+  pp_schedule: all
+  optimizer: [optimizer]
+  bf16_moments: [optimizer]
+  master_weights: [optimizer]
+  cpu_opt_overlap: [optimizer]
+  ema: all
+  qlora: all
+  expandable_segments: all
+  data_workers: all                # Megatron fetches the batch inside forward-backward
+  manual_gc: all
+  nan_check: all                   # inside the loss computation
+  cuda_max_connections: all
+  empty_unused_memory: all
+  omp_threads: all                 # also CPU-offloaded optimizer work

@@ -1,0 +1,10 @@
+xs = data['window_steps']
+n = len(xs)
+if n == 0:
+    return {'n': 0}
+mean = sum(xs) / n
+mad = 0
+for x in xs:
+    mad += abs(x - mean)
+tail = xs[-3:]
+return {'n': n, 'mean_s': round(mean, 6), 'min_s': min(xs), 'max_s': max(xs), 'range_rel': round((max(xs) - min(xs)) / mean, 5), 'mad_rel': round(mad / n / mean, 5), 'tail3_over_mean': round(sum(tail) / len(tail) / mean, 4), 'noisy': mad / n / mean > 0.02}

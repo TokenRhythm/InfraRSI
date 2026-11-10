@@ -1,0 +1,1 @@
+{"train": {"bs": 2, "accum": 2, "hidden": 4096, "layers": 6, "lr": 0.001}}

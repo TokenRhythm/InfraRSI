@@ -1,0 +1,15 @@
+r = data['slowest_ranks']
+n = len(r)
+if n == 0:
+    return {'n': 0}
+best_rank = -1
+best_count = 0
+for cand in sorted(r):
+    c = 0
+    for x in r:
+        if x == cand:
+            c += 1
+    if c > best_count:
+        best_count = c
+        best_rank = cand
+return {'n': n, 'top_slowest_rank': best_rank, 'share': round(best_count / n, 3), 'persistent_straggler': best_count / n >= 0.6}

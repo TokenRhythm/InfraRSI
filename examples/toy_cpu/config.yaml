@@ -1,0 +1,10 @@
+train:
+  micro_batch_size: 1
+  grad_accum: 8
+  fused_optimizer: false
+  workers: 1
+  precision: fp32
+data:
+  seq_len: 512
+optim:
+  lr: 0.001

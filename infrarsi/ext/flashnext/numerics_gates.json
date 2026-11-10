@@ -1,0 +1,37 @@
+{
+ "schema": "flashnext-numerics-gates-v1",
+ "ruling": "AMENDMENT_EXT_003 Q3: the ruled moe_nondeterministic table (values identical to PROPOSED_CHANGES_X4.md) plus MTP CE gated exactly like main CE (reward.yaml: 'MTP CE added for the flagship')",
+ "tier": "moe_nondeterministic",
+ "allowed": "E1",
+ "compared_updates": [1, 30],
+ "window": [17, 30],
+ "tolerance": {
+  "main_ce_rel_max_per_step": 0.005,
+  "main_ce_rel_mean_over_window": 0.002,
+  "grad_norm_rel_max_first_update": 0.03,
+  "grad_norm_log_bias_window_max": 0.10,
+  "grad_norm_rel_per_step": "report_only",
+  "repeated_adjacent_scalars": "invalid"
+ },
+ "mtp_ce": {
+  "mtp_ce_rel_max_per_step": 0.005,
+  "mtp_ce_rel_mean_over_window": 0.002
+ },
+ "lr": "exact",
+ "aux": "present",
+ "scalars": {
+  "main_ce": "values.losses.main_ce",
+  "mtp_ce": "values.losses.mtp_ce",
+  "aux_loss": "values.losses.main_aux_weighted",
+  "mtp_aux": "values.losses.mtp_aux_weighted",
+  "grad_norm": "values.gradients.global_norm",
+  "lr": "values.learning_rates.base_lr"
+ },
+ "e0_bitwise": ["main_ce", "mtp_ce", "aux_loss", "mtp_aux", "grad_norm", "lr"],
+ "classes": {
+  "E0": "main CE, MTP CE, grad norm, LR and aux (main and MTP) bitwise equal to the reference over updates 1-30",
+  "E1": "within every gate above",
+  "FAIL": "any gate violated, a missing / non-finite / gapped update on either side, or repeated adjacent (main_ce, grad_norm): invalid"
+ },
+ "inter_step_consistency": "not applicable: the production path has no inter-step timer (D-F1-4)"
+}

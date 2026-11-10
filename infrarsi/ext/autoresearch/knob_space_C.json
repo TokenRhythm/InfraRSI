@@ -1,0 +1,398 @@
+{
+ "schema": "ext-autoresearch-knob-space-v1",
+ "amendment": "AMENDMENT_EXT_007_FABLE51",
+ "space": {
+  "DEVICE_BATCH_SIZE": [
+   32,
+   64,
+   128
+  ],
+  "compile_mode": [
+   "default",
+   "max-autotune-no-cudagraphs"
+  ],
+  "compile_dynamic": [
+   false,
+   null
+  ],
+  "expandable_segments": [
+   true,
+   false
+  ],
+  "optimizer_foreach": [
+   "default",
+   true
+  ]
+ },
+ "defaults": {
+  "DEVICE_BATCH_SIZE": 128,
+  "compile_mode": "default",
+  "compile_dynamic": false,
+  "expandable_segments": true,
+  "optimizer_foreach": "default"
+ },
+ "removed": [
+  {
+   "knob": "compile_mode",
+   "value": "reduce-overhead",
+   "error_class": "cuda_graph",
+   "evidence": [
+    "envc_calib_a/p2 (train exit 1 after the capture assertion)",
+    "envc_calib_b/p2/a3d6753d59d7d (train exit 1 after 21 s)"
+   ],
+   "mechanism": "CUDA-graph capture conflicts with the loader buffer reuse whatever DBS, allocator or optimizer form"
+  },
+  {
+   "knob": "DEVICE_BATCH_SIZE",
+   "value": 256,
+   "error_class": "oom",
+   "evidence": [
+    "envc_calib_b/p3/a5b5710f69616 (CUDA out of memory at 79 GiB after 15 s)"
+   ],
+   "mechanism": "about 2 x 45 GB of activations; no knob in the space reduces activation memory"
+  },
+  {
+   "knob": "compile_mode",
+   "value": "max-autotune",
+   "error_class": "cuda_graph",
+   "evidence": [
+    "envc_calib_b_mxat/mxat/acce795c621e1 (train exit 1)"
+   ],
+   "mechanism": "torch.compile mode max-autotune captures CUDA graphs like reduce-overhead"
+  }
+ ],
+ "size": 48,
+ "size_without_baseline": 47,
+ "seed": 42,
+ "draw_order": [
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": "default"
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 64,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "default",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 32,
+   "compile_mode": "default",
+   "compile_dynamic": null,
+   "expandable_segments": false,
+   "optimizer_foreach": true
+  },
+  {
+   "DEVICE_BATCH_SIZE": 128,
+   "compile_mode": "max-autotune-no-cudagraphs",
+   "compile_dynamic": false,
+   "expandable_segments": true,
+   "optimizer_foreach": true
+  }
+ ]
+}

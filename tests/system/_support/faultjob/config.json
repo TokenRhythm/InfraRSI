@@ -1,0 +1,4 @@
+{
+ "train": {"bs": 2, "accum": 2, "workers": 1, "opt": "plain"},
+ "optim": {"lr": 0.001}
+}

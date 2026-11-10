@@ -1,0 +1,25 @@
+{
+ "schema": "infrarsi-third-party-fetch-v1",
+ "fetched_utc": "2026-10-20T05:47:00+08:00 (local clone time)",
+ "policy": "fetched public code for baselines; not redistributed with InfraRSI",
+ "repos": {
+  "OptiCo-public": {
+   "url": "https://github.com/TangZhe96/OptiCo-public",
+   "commit": "e5efc74c099bbe9dd82332220049e55da6727d42",
+   "commit_date": "2026-07-14 15:46:53 +0800",
+   "license": "NONE (no LICENSE file in repository)",
+   "license_sha256": null,
+   "version": null,
+   "note": "No LICENSE file: run and cite only, never redistribute (FINAL_PLAN 4.5). Prompts are read at run time by baselines/optico_style. Bundles Pai-Megatron-Patch v0.12.3 (Apache-2.0, unused). Windows checkout needs git core.longpaths=true."
+  },
+  "openevolve": {
+   "url": "https://github.com/algorithmicsuperintelligence/openevolve",
+   "commit": "74c7cb0c06bae9b6134764d28759d3cf40db76ec",
+   "commit_date": "2026-10-19 17:28:37 +0800",
+   "license": "Apache-2.0",
+   "license_sha256": "1eb85fc97224598dad1852b5d6483bbcf0aa8608790dcc657a5a2a761ae9c8c6",
+   "version": "0.4.0",
+   "note": "Run unmodified as a library by baselines/openevolve_adapter (formerly codelion/openevolve). Python deps: openai, pyyaml, numpy, tqdm, flask, dacite, cloudpickle."
+  }
+ }
+}

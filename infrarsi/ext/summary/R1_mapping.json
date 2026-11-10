@@ -1,0 +1,1087 @@
+{
+ "schema": "ext-summary-r1-mapping-v1",
+ "note": "Proposed mapping of every REPRO_ISSUES.md entry onto the design §5.4 vocabularies (for O's review). #1-#18 follow the design's own mapping (§5.4); #19-#37 and the extra rows are X7's proposals. 'hours' = handling time from the logged symptom to the fix in place (or the decision), an ESTIMATE from the timestamps in REPRO_ISSUES.md / EXECUTION_STATUS.md / file times; machine time lost is named in hours_basis, not added. symptom/cause/action are short paraphrases of the ledger entry. Extra rows: AMENDMENT_EXT_005's finding (ruled into R1) and the design §5.4 items that were to be registered during execution but are not in REPRO_ISSUES.md (set include=false to drop one).",
+ "vocabularies": {
+  "stage": [
+   "build",
+   "data",
+   "model",
+   "network",
+   "launch",
+   "run",
+   "score",
+   "method",
+   "protocol"
+  ],
+  "category": [
+   "network",
+   "dependency drift",
+   "hardware mismatch",
+   "missing artifact",
+   "upstream bug",
+   "protocol gap",
+   "self-inflicted"
+  ],
+  "fidelity": [
+   "none",
+   "timing",
+   "numerics",
+   "method",
+   "scope"
+  ],
+  "status": [
+   "resolved",
+   "open",
+   "abandoned"
+  ],
+  "env": [
+   "ENV-A",
+   "ENV-B",
+   "ENV-C",
+   "F1",
+   "all"
+  ]
+ },
+ "issues": {
+  "1": {
+   "env": [
+    "all"
+   ],
+   "stage": "launch",
+   "category": [
+    "hardware mismatch"
+   ],
+   "ids": [],
+   "fidelity": "scope",
+   "status": "open",
+   "symptom": "WINH2/5/7 refuse SSH and time out",
+   "cause": "nodes down or released (external)",
+   "action": "plan on WINH0/1/3/4/6 (40 H100)",
+   "hours": 0.2,
+   "hours_basis": "estimate: probes at 03:12, plan adjusted the same hour",
+   "mapping_source": "design §5.4 (#1 hardware/scope)"
+  },
+  "2": {
+   "env": [
+    "all"
+   ],
+   "stage": "network",
+   "category": [
+    "network"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "GitHub, huggingface.co, hf-mirror unreachable from WINH",
+   "cause": "site network policy",
+   "action": "download on the PC + SFTP; ModelScope mirrors on WINH0",
+   "hours": 0.5,
+   "hours_basis": "estimate: workaround in place by the first ModelScope fetch (03:20, #6); slow uploads recur (#7)",
+   "mapping_source": "design §5.4"
+  },
+  "3": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "data",
+   "category": [
+    "missing artifact"
+   ],
+   "ids": [
+    "D-OC-1"
+   ],
+   "fidelity": "numerics",
+   "status": "resolved",
+   "symptom": "PAI OSS WuDao dataset URLs return 403",
+   "cause": "links expired or made private",
+   "action": "substitute MMAP from a swift/wikipedia shard with Pai's own tool",
+   "fidelity_note": "loss values only; the judged TFLOPS do not depend on token content at fixed shapes",
+   "hours": 0.5,
+   "hours_basis": "estimate: 03:15 -> data built about 04:16, the hour shared with #10/#12/#13/#15",
+   "mapping_source": "design §5.4"
+  },
+  "4": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "model",
+   "category": [
+    "missing artifact"
+   ],
+   "ids": [
+    "D-OC-7"
+   ],
+   "fidelity": "scope",
+   "status": "abandoned",
+   "symptom": "Qwen3-MoE-A0.6B not on ModelScope, 401 on HF",
+   "cause": "model gated or removed",
+   "action": "MoE workload dropped (a substitute MoE would change layers and experts)",
+   "hours": 0.1,
+   "hours_basis": "estimate: decided in the design (D5)",
+   "mapping_source": "design §5.4"
+  },
+  "5": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "build",
+   "category": [
+    "hardware mismatch"
+   ],
+   "ids": [
+    "D-OC-5"
+   ],
+   "fidelity": "timing",
+   "status": "resolved",
+   "symptom": "OptiCo's nvcr 24.11 container unusable",
+   "cause": "WINH docker has no nvidia runtime; nvcr.io unreachable",
+   "action": "H100 venv (torch 2.10, TE 2.16, apex) + Pai/Megatron on PYTHONPATH",
+   "hours": 0.3,
+   "hours_basis": "estimate: 03:16 -> imports verified before R3",
+   "mapping_source": "design §5.4"
+  },
+  "6": {
+   "env": [
+    "all"
+   ],
+   "stage": "network",
+   "category": [
+    "network"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "modelscope download refused twice by one IP",
+   "cause": "transient refusals",
+   "action": "retry loop (ms_fetch.sh) succeeded on attempt 3",
+   "hours": 0.1,
+   "hours_basis": "estimate: same session (03:20)",
+   "mapping_source": "design §5.4"
+  },
+  "7": {
+   "env": [
+    "ENV-C"
+   ],
+   "stage": "build",
+   "category": [
+    "network"
+   ],
+   "ids": [
+    "D-AR-2"
+   ],
+   "fidelity": "timing",
+   "status": "resolved",
+   "symptom": "FA3 kernel fetched from HF at import: unreachable / too slow over SFTP",
+   "cause": "network",
+   "action": "ModelScope mirror of kernels-community/flash-attn3; one-line repo change in train.py",
+   "fidelity_note": "same FA3 family; R2 reproduced (948 vs 953 steps)",
+   "hours": 0.5,
+   "hours_basis": "estimate: 03:38 -> R2 run",
+   "mapping_source": "design §5.4"
+  },
+  "8": {
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "build",
+   "category": [
+    "dependency drift"
+   ],
+   "ids": [
+    "D-RB-4"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "pip install fails on sentencepiece 0.1.97",
+   "cause": "no cp311 wheel; the sdist clones GitHub",
+   "action": "pin sentencepiece 0.1.99",
+   "hours": 0.2,
+   "hours_basis": "estimate: 03:48 -> 03:51 (#9)",
+   "mapping_source": "design §5.4"
+  },
+  "9": {
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "build",
+   "category": [
+    "dependency drift"
+   ],
+   "ids": [
+    "D-RB-5"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "import llmfoundry fails: pkg_resources missing",
+   "cause": "setuptools >= 81 removed pkg_resources",
+   "action": "pin setuptools 69.5.1",
+   "hours": 0.2,
+   "hours_basis": "estimate: 03:51 -> build done about 04:00",
+   "mapping_source": "design §5.4"
+  },
+  "10": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "data",
+   "category": [
+    "upstream bug"
+   ],
+   "ids": [
+    "D-OC-2"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "Pai preprocessing crashes: no padded_vocab_size",
+   "cause": "released tool bug (get_args never sets the field)",
+   "action": "wrapper sets padded_vocab_size=0 and calls the tool's main()",
+   "hours": 0.3,
+   "hours_basis": "estimate: 03:55 -> wrapper written 04:07",
+   "mapping_source": "design §5.4"
+  },
+  "11": {
+   "env": [
+    "all"
+   ],
+   "stage": "build",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "finetune.sh: /bin/bash^M bad interpreter; every staged text file CRLF",
+   "cause": "Git for Windows autocrlf=true on the PC (and a wrong MSYS check)",
+   "action": "re-checkout with autocrlf=false, byte check, re-upload (restage_sources.sh)",
+   "hours": 0.5,
+   "hours_basis": "estimate: 03:55 -> restage_sources.sh 04:03 + re-extraction",
+   "mapping_source": "design §5.4"
+  },
+  "12": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "build",
+   "category": [
+    "dependency drift"
+   ],
+   "ids": [
+    "D-OC-3"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "Pai tokenizer: Qwen2Tokenizer has no attribute encoder",
+   "cause": "venv transformers 5.8 vs Pai's 4.x",
+   "action": "overlay optico_tf451 (transformers 4.51.3, tokenizers 0.21.1, hub 0.30.2)",
+   "hours": 0.3,
+   "hours_basis": "estimate: 03:58 -> data build re-run",
+   "mapping_source": "design §5.4"
+  },
+  "13": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "data",
+   "category": [
+    "upstream bug"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "preprocessing main process hangs after a worker exception",
+   "cause": "multiprocessing.Pool parent waits forever",
+   "action": "killed the stale processes; re-ran after #12",
+   "hours": 0.2,
+   "hours_basis": "estimate: 03:58, same session as #12",
+   "mapping_source": "design §5.4"
+  },
+  "14": {
+   "env": [
+    "ENV-C"
+   ],
+   "stage": "build",
+   "category": [
+    "dependency drift"
+   ],
+   "ids": [
+    "D-AR-3"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "pip resolved newer kernels / numpy / hub than uv.lock",
+   "cause": "pyproject has lower bounds only; uv not used on WINH",
+   "action": "every package pinned to its uv.lock version (D-AR-3 narrowed to 'pip, same versions')",
+   "hours": 0.3,
+   "hours_basis": "estimate: 04:02 -> build done before R2",
+   "mapping_source": "design §5.4"
+  },
+  "15": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "data",
+   "category": [
+    "self-inflicted",
+    "upstream bug"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "data build printed DATA_DONE with 0-byte .bin files",
+   "cause": "our wrapper's unregistered module (unpicklable Encoder); the tool exits 0 when its worker dies",
+   "action": "register the module; the build checks every .bin/.idx is non-empty",
+   "hours": 0.3,
+   "hours_basis": "estimate: 04:06 -> data done before R3 (04:30)",
+   "mapping_source": "design §5.4"
+  },
+  "16": {
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "model",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [
+    "D-RB-2"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "official solution S1 fails: model not found by its HF id",
+   "cause": "the solution names the HF id; our first offline deviation only covered BASE_MODEL",
+   "action": "HF id served offline from a cache at the true revision c919139c; rerun r1_20261021b",
+   "hours": 0.5,
+   "hours_basis": "estimate: 04:16 -> r1b, then #17",
+   "mapping_source": "design §5.4"
+  },
+  "17": {
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "network",
+   "category": [
+    "protocol gap",
+    "network"
+   ],
+   "ids": [
+    "D-RB-6"
+   ],
+   "fidelity": "timing",
+   "status": "resolved",
+   "symptom": "every rank crashes in from_pretrained: HEAD request to huggingface.co",
+   "cause": "transformers 4.40.2 has_file() ignores offline mode; online in METR's VMs",
+   "action": "one-line env patch: has_file returns False on connection errors; rerun r1_20261021c",
+   "fidelity_note": "offline runs skip a HEAD round trip and a conversion-thread attempt (slightly faster, every arm alike)",
+   "hours": 0.5,
+   "hours_basis": "estimate: 04:20 -> R1c done before the design (04:46)",
+   "mapping_source": "design §5.4"
+  },
+  "18": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "model",
+   "category": [
+    "network"
+   ],
+   "ids": [
+    "D-OC-9"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "gpt3-7B default fails in 27 s: gpt2 tokenizer resolved online",
+   "cause": "Megatron core 0.15 GPT2BPETokenizer resolves 'gpt2' on the HF hub",
+   "action": "offline HF cache for gpt2 at the true revision; rerun r3_20261021b",
+   "hours": 0.3,
+   "hours_basis": "estimate: 04:34 -> r3b",
+   "mapping_source": "design §5.4"
+  },
+  "19": {
+   "env": [
+    "ENV-B",
+    "F1"
+   ],
+   "stage": "method",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [
+    "D-OC-15"
+   ],
+   "fidelity": "method",
+   "status": "resolved",
+   "symptom": "every give_sugg call refused by the Opus 5.5 safeguard [reasoning_extraction] (9/9)",
+   "cause": "OptiCo's prompt demands step-by-step reasoning inside <think> tags; the driver refuses to emit its reasoning",
+   "action": "D-OC-15 strip_think_format (only those lines dropped) for B-NAT and F-OPTICO",
+   "fidelity_note": "OptiCo's visible chain of thought is no longer produced; suggestions, parsers and loop unchanged",
+   "hours": 1.5,
+   "hours_basis": "estimate: 05:38 -> D7 and the passing G-B smokes b/c about 07:00",
+   "mapping_source": "X7 proposal"
+  },
+  "20": {
+   "env": [
+    "ENV-C"
+   ],
+   "stage": "data",
+   "category": [
+    "upstream bug"
+   ],
+   "ids": [
+    "D-AR-7"
+   ],
+   "fidelity": "numerics",
+   "status": "resolved",
+   "symptom": "unmodified baseline 1.0228 on WINH0 GPU0 vs 0.9977 on WINH3; step-1 loss differs between GPUs",
+   "cause": "H2D race in prepare.make_dataloader (pinned buffer refilled while a non_blocking copy is queued)",
+   "action": "D-AR-7 h2d_sync in every candidate's prepare.py (judge keeps the original); AMENDMENT_EXT_002 Q2",
+   "fidelity_note": "without the fix an infra change could move val_bpb by about 0.025 (12x the margin)",
+   "hours": 1.5,
+   "hours_basis": "estimate: X1 c0 runs 05:46 -> issue 06:20 -> D9 / AMENDMENT_EXT_002 06:42 + the D-AR-7 run",
+   "mapping_source": "X7 proposal"
+  },
+  "21": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "score",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "W3 default: iteration 4 slowest in 4/4 runs; pre-declared within-run margin 13-25 %",
+   "cause": "a systematic within-run pattern, not run-to-run noise (judge-value RSD 1.9 %)",
+   "action": "AMENDMENT_EXT_002 Q1: margin from the run-to-run RSD of protocol default runs",
+   "fidelity_note": "decision rule only (W3 margin about 5.7 % instead of 13-25 %)",
+   "hours": 0.5,
+   "hours_basis": "estimate: 06:30 -> AMENDMENT_EXT_002 06:42",
+   "mapping_source": "X7 proposal"
+  },
+  "22": {
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "score",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [
+    "D-RB-15"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "score.py, run as root by our scorer, launches the candidate's finetune.sh as root",
+   "cause": "our harness (METR scores under a protected group, not root)",
+   "action": "D-RB-15: candidate code and G4 trainings unprivileged; G8 no_symlink_escape; per-run TMPDIR",
+   "hours": 1.0,
+   "hours_basis": "estimate: found 06:00 -> X2 follow-up 1 done and S0 re-timed about 07:00",
+   "mapping_source": "X7 proposal"
+  },
+  "23": {
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "launch",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "R1 run dirs (reference weights, official-solution run) world-readable",
+   "cause": "created as root with the default umask before the per-arm uid model",
+   "action": "chmod 700 / 711; denial probe as the arm uid",
+   "hours": 0.2,
+   "hours_basis": "estimate: found and fixed by X2 at 08:20",
+   "mapping_source": "X7 proposal"
+  },
+  "24": {
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "run",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [],
+   "fidelity": "timing",
+   "status": "resolved",
+   "symptom": "unchanged S0 scored 255.9 s (WINH3) / 262.2 s (WINH4) as first scorings vs 215.5-216.1 s on WINH1",
+   "cause": "cold caches on a fresh node's first scoring, not a slower node",
+   "action": "AMENDMENT_EXT_004: per-node S0 references, the WINH1 block; cold first scorings reported, not corrected",
+   "hours": 0.5,
+   "hours_basis": "estimate: 09:15 -> AMENDMENT_EXT_004 09:29 -> node_ref WINH3 09:36-09:42 (+0.32 GPUh)",
+   "mapping_source": "X7 proposal"
+  },
+  "25": {
+   "env": [
+    "ENV-C"
+   ],
+   "stage": "launch",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "co-location calibration: four runs exit 1 (permission denied)",
+   "cause": "the shared run dir took the last uid's group (750)",
+   "action": "per-candidate ownership, run dirs 711; re-run as envc_calib_b",
+   "hours": 0.3,
+   "hours_basis": "estimate: 09:21 -> envc_calib_b about 09:31",
+   "mapping_source": "X7 proposal"
+  },
+  "26": {
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "score",
+   "category": [
+    "protocol gap",
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "A-ISW's locked selection rejected by G4 clause (i): D' pair norm 5.41 > 5.3, data-dependence ratio 1.0004",
+   "cause": "the pre-declared clause used score.py's D-calibrated 5.3 on D', where the unchanged S0 sits at 4.79",
+   "action": "AMENDMENT_EXT_005: limit_D' = 5.3 + (m' - m), provisional 6.17; both validities reported",
+   "fidelity_note": "decision rule; one locked validity outcome changes (disclosed)",
+   "hours": 0.3,
+   "hours_basis": "estimate: locked result 09:27 -> AMENDMENT_EXT_005 09:35",
+   "mapping_source": "AMENDMENT_EXT_005 (stage score, category protocol gap / self-inflicted)"
+  },
+  "27": {
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "run",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [
+    "D-RB-16"
+   ],
+   "fidelity": "method",
+   "status": "resolved",
+   "symptom": "A-NAT repeated one read-only command 168 times from turn 19; 0 scorings in 49 min",
+   "cause": "greedy decoding (T 0, JSON mode) imposed on a scaffold that relies on sampling",
+   "action": "AMENDMENT_EXT_006: anat_a abandoned; restart anat_b at T 1.0 with a stop-only loop detector",
+   "fidelity_note": "the native arm's decoding differs from A-ISW's greedy weak protocol (declared)",
+   "hours": 0.3,
+   "hours_basis": "estimate: noticed about 09:55 -> AMENDMENT_EXT_006 09:56 -> restart 10:08; machine time lost: about 0.9 h of WINH1 (4 GPUs), 8.8M tokens",
+   "mapping_source": "AMENDMENT_EXT_006 (stage run, self-inflicted, fidelity method)"
+  },
+  "28": {
+   "env": [
+    "ENV-C"
+   ],
+   "stage": "run",
+   "category": [
+    "upstream bug",
+    "protocol gap"
+   ],
+   "ids": [],
+   "fidelity": "scope",
+   "status": "resolved",
+   "symptom": "CUDA-graph compile modes crash in the first steps; DEVICE_BATCH_SIZE 256 runs out of memory",
+   "cause": "CUDA-graph outputs reused across steps by the loop on torch 2.9.1; DBS 256 needs about 2x the DBS-128 activations",
+   "action": "AMENDMENT_EXT_007: removed from C-RND's sampler only (47-point frozen space); failure_class in every receipt",
+   "fidelity_note": "the random control covers at most 77 % of the pruned space",
+   "hours": 0.5,
+   "hours_basis": "estimate: calibration 09:31 -> AMENDMENT_EXT_007 10:02 -> the max-autotune check",
+   "mapping_source": "X7 proposal"
+  },
+  "29": {
+   "env": [
+    "ENV-B",
+    "ENV-C",
+    "F1"
+   ],
+   "stage": "method",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "Opus-driven arms only read: B-IS W1 screened only its default, C-IS only its baseline, C-NAT arms 0 experiments",
+   "cause": "our CLI transport ran claude -p with --permission-mode plan (inherited from the main project's backend)",
+   "action": "--permission-mode manual; every Opus run made under plan mode abandoned and re-run (D19)",
+   "fidelity_note": "none on the re-runs",
+   "hours": 0.5,
+   "hours_basis": "estimate: noticed 10:50 -> fix and relaunch about 11:00; machine time lost: about 3 h of WINH0/3/6 and about $27 of Opus (abandoned runs)",
+   "mapping_source": "X7 proposal"
+  },
+  "30": {
+   "env": [
+    "all"
+   ],
+   "stage": "launch",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "a lane script was edited while lanes started from it were running",
+   "cause": "bash reads a running script incrementally (stale byte offset)",
+   "action": "stopped the lane wrappers; relaunch from lanes2.sh; rule: never edit a running lane script",
+   "hours": 0.2,
+   "hours_basis": "estimate: 11:00, same session",
+   "mapping_source": "X7 proposal"
+  },
+  "31": {
+   "env": [
+    "ENV-B",
+    "ENV-C"
+   ],
+   "stage": "method",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "every LLM call of the running Opus arms failed from 11:57 (`CLI executable changed after initialization`); C-IS proposals rejected as `unexpected turns`; native agents emitted invalid structured JSON actions",
+   "cause": "(a) the user's Claude Code auto-updated the shared CLI binary during the runs (2.1.305 -> 2.1.306) and our backend refuses a changed transport mid-run; (b) a full-file propose_patch plus thinking exceeded the 16K per-call output cap, so the CLI continued in a second turn, which the backend rejects",
+   "action": "pinned private CLI copy (INFRARSI_CLAUDE_EXE), auto-updater off per call, 32K output cap (D21); abandoned and re-run bnat_w1_b, bnat_w2_b and ENV-C envc_*_d",
+   "fidelity_note": "none on the re-runs; time and about $40 of Opus lost (REPRO_ISSUES #31)",
+   "hours": 0.4,
+   "hours_basis": "records: issue 12:00 local; the re-runs' first events 04:23 UTC (bnat_w1_c, bnat_w2_c) and 04:28 UTC (envc_*_e), i.e. 12:23-12:28 local",
+   "mapping_source": "X7 proposal"
+  },
+  "32": {
+   "env": [
+    "all"
+   ],
+   "stage": "run",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "builders and the orchestrator stopped with `You've hit your session limit` (HTTP 429) until 12:20",
+   "cause": "the orchestrator, seven builder agents and the Opus-driven arms draw on one Claude Max subscription; the builders' long sessions dominated",
+   "action": "at most about 3 Opus agents at once; builders idle unless needed; the summary builder resumes after the runs (D22)",
+   "fidelity_note": "none observed; an Opus arm hitting the limit mid-run would record model errors (watched)",
+   "hours": 0.17,
+   "hours_basis": "REPRO_ISSUES #32: 12:10-12:20 local",
+   "mapping_source": "X7 proposal"
+  },
+  "33": {
+   "env": [
+    "ENV-C"
+   ],
+   "stage": "run",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "C-RND envc_crnd_d stopped by the same-failure x6 rule: 6 attempts refused `occupied: 1 foreign compute process`",
+   "cause": "the co-located C-NAT-infra agent profiled on its own GPU 4; C-RND's node-wide occupancy check could not read that uid's environ (root lacks CAP_SYS_PTRACE) and counted it as foreign",
+   "action": "X1: occupancy per attempt GPU only; our arm uids never foreign on sibling GPUs; refusals caused by a sibling not counted as failures",
+   "fidelity_note": "none after the fix (run d abandoned anyway, #31)",
+   "hours": 0.4,
+   "hours_basis": "records: issue 12:05 local; the fixed group's first events 04:28 UTC (envc_*_e), i.e. 12:28 local",
+   "mapping_source": "X7 proposal"
+  },
+  "34": {
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "launch",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "method",
+   "status": "resolved",
+   "symptom": "bis_w3_a's first two screens failed `AttemptDeadline: pre_launch deadline passed before launch (3 s late)` / `before acquire (1 s late)`; brnd_w3_a one screen (c16)",
+   "cause": "the bounded-admission pre-launch phase (lease + upload + launch) allowed only 60 s, less than real SSH latency on WINH4",
+   "action": "X3: phases at 12 s per remote call (pre-launch 180 s, post 210 s, release reserve 110 s); a pre-launch refusal is infra_refusal and neither counts toward nor resets same-failure x6 (D24); applies to processes started after 14:05; B-IS W3 and B-RND W3 not re-run (nothing launched, the screen budget did not bind)",
+   "fidelity_note": "B-IS W3 lost 2 of 21 screens and B-RND W3 1 (nothing was launched); the refusals and their method impact (B-IS's proposer saw them as failures, D24) are reported with the results; the held lease is charged on the refused receipts (0.40 GPUh B-IS W3, 0.21 GPUh B-RND W3) and this fully charged accounting does not make the labels incomplete (D26(a))",
+   "hours": 0.65,
+   "hours_basis": "REPRO_ISSUES #34 13:26 local; the fix applies to processes started after 14:05 (D24)",
+   "mapping_source": "X7 proposal"
+  },
+  "35": {
+   "env": [
+    "ENV-C"
+   ],
+   "stage": "launch",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "ENV-C lane `C0E e` failed at the C-NAT-free locked pair after 1 s: `FileNotFoundError .../envc_cnatfree_e/trace.json`",
+   "cause": "scripts/lanes4.sh passed <run>/trace.json for every arm, but the native arms' basic-agent trace is <run>/agent/trace.json (only C-RND / C-IS write a search trace at the top); never exercised before because earlier ENV-C groups were abandoned before their locked pairs",
+   "action": "the remaining three locked pairs (C-NAT-free, C-NAT-infra, C-IS) re-run from scripts/lanes8.sh C0L e with the correct paths (dry-run parsed each trace first), same group lease id, GPUs, arm indices and order; the F1 lane re-armed on C0L_e",
+   "fidelity_note": "none; no run lost; about 1 h delay to the F1 start (REPRO_ISSUES #35)",
+   "hours": null,
+   "hours_basis": "not recorded: REPRO_ISSUES #35 gives the effect (about 1 h delay to the F1 start), not the handling time",
+   "mapping_source": "X7 proposal"
+  },
+  "36": {
+   "env": [
+    "F1"
+   ],
+   "stage": "method",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "scope",
+   "status": "resolved",
+   "symptom": "F-PROMPTS' first two one-shot recommendations (c1, c2) crashed on all 32 ranks at initialisation: `AssertionError: assert not tuned.DKDV_FAST`",
+   "cause": "the frozen training path asserts that the QSA dK/dV fast mask is off, but S_F1 (ext/flashnext/switch_space.py) offered qsa_dkdv_fastmask in {0, 1} under systems_policy: 324 of its 677 \"admissible\" points crash deterministically (the generator pinned the switch to 0 only for production_qsa_memo_segsum and family W); the task view told the arms the switch was admissible",
+   "action": "F1 lane stopped at 18:49; S_F1 corrected for every F1 arm (AMENDMENT_EXT_008, D28): qsa_dkdv_fastmask fixed to 0 (key kept), 677 -> 353 admissible points, new sha e04034a3... (ea48b522... superseded, flashnext/FREEZE_EXT008.json); F-RND's seed-42 order redrawn over the corrected space; f1_prompts_20261021 abandoned and F-PROMPTS re-run once (f1_prompts_20261021b); the U+C and F-HT references kept",
+   "fidelity_note": "the arms' space shrank to the 353 points the production path admits (the removed values were never an option of the path); f1_prompts_20261021 enters no table (pipeline-fix line); F1 delayed",
+   "hours": null,
+   "hours_basis": "not recorded: REPRO_ISSUES #36 gives the stop (18:49) and the ruling, not the handling time",
+   "mapping_source": "X7 proposal, ruled by O (method / scope, resolved by AMENDMENT_EXT_008)"
+  },
+  "37": {
+   "env": [
+    "F1"
+   ],
+   "stage": "score",
+   "category": [
+    "self-inflicted"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "f1_prompts_20261021b c1 ran on all 32 GPUs, then the PC-side runner failed with `runner_error: JSONDecodeError: Unterminated string ... column 41868003`; only 8 of 32 rank signal files arrived (c2 the same)",
+   "cause": "a race in our shared SSH transport (infrarsi/harness/remote.py, WinhRemote._exec): the read loop stops once the exit status has arrived and nothing is buffered, so a reply larger than the 2 MiB channel window can lose its tail; the F1 collect step fetched the rank signal logs in about 47 MB replies",
+   "action": "resolved by the chunked collector (node-side lzma chunks <= 1 MiB, sha256 per file, SFTP fallback) and the remote.py fix (Codex-reviewed), and AMENDMENT_EXT_009 (D29): read-only re-collection of the intact node files judged by the unchanged judge, recorded as signed superseding receipts (`receipts/<cand>.recollected.json`, collection recollected_readonly) beside the retained runner_error receipts; no GPU re-spent, no LLM call repeated; the multi-step arms keep a lost screen as harness_lost (charged, descriptive-only recovery)",
+   "fidelity_note": "none for the recovered screens (c1-c3 of f1_prompts_20261021b: 8.3409 / 8.9804 / 9.2036 s); scope for any screen left unrecovered; the pause from c2's end to the resume is pipeline-fix cost",
+   "hours": null,
+   "hours_basis": "not recorded: REPRO_ISSUES #37 gives the stop (19:50) and the ruling, not the handling time",
+   "mapping_source": "X7 proposal, per AMENDMENT_EXT_009 Q5 (stage score / collect, self-inflicted, fidelity none for recovered screens, resolved)"
+  }
+ },
+ "extra_rows": [
+  {
+   "id": "E5",
+   "include": true,
+   "source": "AMENDMENT_EXT_005 (ruled into R1: stage method, protocol gap, fidelity method, open)",
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "method",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [],
+   "fidelity": "method",
+   "status": "open",
+   "symptom": "A-ISW finished by its own `finish` after 3 scorings (5 % of its budget)",
+   "cause": "the weak policy's L1 unlock counts screens, not vetoed proposals: 7 verifier vetoes kept L1 locked and the proposer declared L0 exhausted",
+   "action": "reported as the system's behaviour (no resume, no re-run, no policy change)",
+   "hours": null,
+   "hours_basis": "n/a: a finding about the system under test"
+  },
+  {
+   "id": "D1",
+   "include": true,
+   "source": "design §5.4 (to be registered during execution; not in REPRO_ISSUES.md)",
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "network",
+   "category": [
+    "network"
+   ],
+   "ids": [
+    "D-OC-14"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "WINH nodes cannot reach the PC's LLM shim",
+   "cause": "no route from WINH to the PC",
+   "action": "paramiko reverse tunnel (scripts/rtunnel.py)",
+   "hours": null,
+   "hours_basis": "n/a: design-time adaptation"
+  },
+  {
+   "id": "D2",
+   "include": true,
+   "source": "design §5.4",
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "method",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [
+    "D-OC-4",
+    "D-OC-8"
+   ],
+   "fidelity": "method",
+   "status": "resolved",
+   "symptom": "analyzer.py hard-codes model gpt-5.2 and temperature 0.7",
+   "cause": "the method's own client settings",
+   "action": "the shim answers with Opus 5.5 and logs the requested name; temperature not settable (recorded)",
+   "hours": null,
+   "hours_basis": "n/a: design-time adaptation"
+  },
+  {
+   "id": "D3",
+   "include": true,
+   "source": "design §5.4",
+   "env": [
+    "ENV-B"
+   ],
+   "stage": "score",
+   "category": [
+    "hardware mismatch"
+   ],
+   "ids": [
+    "D-OC-6"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "OptiCo's MFU column divides by the A100 constant 312",
+   "cause": "H100 instead of A100",
+   "action": "column copied as is (/312) plus H100 MFU (/989)",
+   "hours": null,
+   "hours_basis": "n/a: design-time adaptation"
+  },
+  {
+   "id": "D4",
+   "include": true,
+   "source": "design §5.4",
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "score",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [],
+   "fidelity": "none",
+   "status": "open",
+   "symptom": "norm_diff headroom about 1 unit: the unchanged script reaches 3.4-4.3 of the 5.3 limit",
+   "cause": "judge noise of the environment (not a fault)",
+   "action": "locked re-score + guards G3/G4/G7; InvalidAccept reported",
+   "hours": null,
+   "hours_basis": "n/a: property of the environment"
+  },
+  {
+   "id": "D5",
+   "include": true,
+   "source": "design §5.4",
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "build",
+   "category": [
+    "hardware mismatch"
+   ],
+   "ids": [
+    "D-RB-7"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "no container; one venv; scoring on the node",
+   "cause": "WINH docker has no nvidia runtime",
+   "action": "venv on the node (candidate code unprivileged since D-RB-15)",
+   "hours": null,
+   "hours_basis": "n/a: design-time adaptation"
+  },
+  {
+   "id": "D6",
+   "include": true,
+   "source": "design §5.4",
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "protocol",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [
+    "D-RB-8"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "the reference model must stay invisible to agents with a shell",
+   "cause": "METR's protected scoring group not available",
+   "action": "reference relocated outside the agent tree (root:700), guard G1",
+   "hours": null,
+   "hours_basis": "n/a: design-time adaptation"
+  },
+  {
+   "id": "D7",
+   "include": true,
+   "source": "design §5.4",
+   "env": [
+    "ENV-A"
+   ],
+   "stage": "score",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [
+    "D-RB-9"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "every score must be logged with its solution",
+   "cause": "Vivaria's score log not available",
+   "action": "scoring wrapper writes scores.jsonl + a solution snapshot",
+   "hours": null,
+   "hours_basis": "n/a: design-time adaptation"
+  },
+  {
+   "id": "D8",
+   "include": true,
+   "source": "design §5.4",
+   "env": [
+    "ENV-A",
+    "ENV-C"
+   ],
+   "stage": "method",
+   "category": [
+    "missing artifact"
+   ],
+   "ids": [
+    "D-RB-10",
+    "D-AR-6"
+   ],
+   "fidelity": "method",
+   "status": "resolved",
+   "symptom": "the native scaffolds (METR's basic agent; Claude Code / Codex in the repo) are not available offline",
+   "cause": "the original agents cannot run here",
+   "action": "basic-agent re-implementations with the published instructions verbatim",
+   "hours": null,
+   "hours_basis": "n/a: design-time adaptation"
+  },
+  {
+   "id": "D9",
+   "include": true,
+   "source": "design §5.4",
+   "env": [
+    "ENV-C"
+   ],
+   "stage": "run",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [
+    "D-AR-4"
+   ],
+   "fidelity": "timing",
+   "status": "resolved",
+   "symptom": "four ENV-C arms co-located on one node (GPUs 0/2/4/6)",
+   "cause": "one node for the four 1-GPU arms in one window",
+   "action": "co-location calibration (G-C passed: 933 vs 936 steps)",
+   "hours": null,
+   "hours_basis": "n/a: design-time adaptation"
+  },
+  {
+   "id": "D10",
+   "include": true,
+   "source": "design §5.4",
+   "env": [
+    "ENV-C"
+   ],
+   "stage": "score",
+   "category": [
+    "protocol gap"
+   ],
+   "ids": [
+    "D-AR-5"
+   ],
+   "fidelity": "none",
+   "status": "resolved",
+   "symptom": "the published judge is the script's own printed val_bpb, which an infra change could alter",
+   "cause": "no trusted evaluation in the original protocol",
+   "action": "trusted re-evaluation of final_model.pt with the original prepare.py + model_ref.py (infra track)",
+   "hours": null,
+   "hours_basis": "n/a: design-time adaptation"
+  }
+ ],
+ "lessons": [
+  {
+   "text": "Stage every third-party repository with core.autocrlf=false and byte-check it before the first upload.",
+   "issues": [
+    11
+   ]
+  },
+  {
+   "text": "Pin the whole dependency set from the lock file / the 2024 image before the first build; never let pip resolve.",
+   "issues": [
+    8,
+    9,
+    12,
+    14
+   ]
+  },
+  {
+   "text": "Pre-stage offline caches at the true revisions for every hub id the task or its official solution names, and patch online-only code paths before any timed run.",
+   "issues": [
+    16,
+    17,
+    18
+   ]
+  },
+  {
+   "text": "Run each LLM transport end to end with the method's verbatim prompts and one acting turn (permission mode, refusals, decoding) before any arm.",
+   "issues": [
+    19,
+    27,
+    29
+   ]
+  },
+  {
+   "text": "Measure judge noise on the data variants the guards use (run to run, not within run) before pre-declaring margins and guard limits.",
+   "issues": [
+    21,
+    26
+   ]
+  },
+  {
+   "text": "Check quality-judged environments for timing-dependent data paths (asynchronous H2D, loader buffers) before using them as an infra benchmark.",
+   "issues": [
+    20
+   ]
+  },
+  {
+   "text": "Calibrate every node (warm S0 after a priming pass) and every knob value's feasibility before the arms.",
+   "issues": [
+    24,
+    28
+   ]
+  },
+  {
+   "text": "Create run directories per trust domain with restrictive modes from the start; never run candidate code as root.",
+   "issues": [
+    22,
+    23,
+    25
+   ]
+  },
+  {
+   "text": "Treat lane scripts as immutable while their lanes run; version them.",
+   "issues": [
+    30
+   ]
+  },
+  {
+   "text": "Check datasets and gated models on day 0 and decide substitute or drop before building adapters.",
+   "issues": [
+    3,
+    4
+   ]
+  }
+ ]
+}

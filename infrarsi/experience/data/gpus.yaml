@@ -1,0 +1,12 @@
+# infrarsi-exp/1 GPU classes: the names nvidia-smi / rocm-smi print map to one class; the numbers are what the LLM's
+# transfer judgment compares between environments (null = unknown; measured values from the harvests where available).
+H100-SXM-80GB:  {aliases: ["NVIDIA H100 80GB HBM3", "H100-80GB", "H100 SXM"], arch: sm_90, memory_gib: 79.6,
+                 bf16_tflops_peak: 989, bf16_tflops_measured: 740, fp8_tflops_measured: 1307, hbm_tbps: 3.35, intra_link_gbps: 450,
+                 notes: "measured 2026-10-24 on WINH1 GPU0: square GEMMs 4096-16384, torch 2.8 matmul / _scaled_mm e4m3"}
+H200-141GB:     {aliases: ["NVIDIA H200", "NVIDIA L20X", "H200-class"], arch: sm_90, memory_gib: 140.4,
+                 bf16_tflops_peak: 989, bf16_tflops_measured: 700, fp8_tflops_measured: 1336, hbm_tbps: 4.8, intra_link_gbps: 450,
+                 notes: "unicom 'L20X' nodes report sm_90, 141 GB, 700 W, NV18 (H200-class per the owner)"}
+H20-96GB:       {aliases: ["NVIDIA H20"], arch: sm_90, memory_gib: 95.1,
+                 bf16_tflops_peak: 148, bf16_tflops_measured: 140, fp8_tflops_measured: 281, hbm_tbps: 4.0, intra_link_gbps: 450}
+A100-SXM-80GB:  {aliases: ["NVIDIA A100-SXM4-80GB", "A100-80GB"], arch: sm_80, memory_gib: 79.2,
+                 bf16_tflops_peak: 312, bf16_tflops_measured: null, hbm_tbps: 2.04, intra_link_gbps: 300}

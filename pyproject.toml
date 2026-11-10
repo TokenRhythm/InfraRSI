@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infrarsi"
+version = "0.3.0"
+description = "Make an existing training job faster, verified: LLM-guided search with a correctness checklist."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pyyaml>=6", "tomli>=2; python_version < '3.11'"]
+
+[project.optional-dependencies]
+anthropic = ["anthropic"]
+tpe = ["optuna>=3"]
+cluster = ["paramiko>=3"]
+all = ["anthropic", "optuna>=3", "paramiko>=3"]
+
+[project.scripts]
+infrarsi = "infrarsi.cli.main:main"
+
+[tool.setuptools.packages.find]
+include = ["infrarsi*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.jsonl", "*.md", "*.analysis", "*.yaml"]

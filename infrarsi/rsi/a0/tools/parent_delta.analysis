@@ -1,0 +1,21 @@
+p = data['parent']
+if p == None:
+    return {'parent': False}
+t = data['step_time']['mean_window_max_rank_s']
+pt = p['step_time']['mean_window_max_rank_s']
+if t == None or pt == None:
+    return {'parent': True, 'comparable': False}
+gain = (pt - t) / pt
+ti = data['step_time']['inter_step_mean_s']
+pti = p['step_time']['inter_step_mean_s']
+igain = None
+consistent = None
+if ti != None and pti != None:
+    igain = round((pti - ti) / pti, 5)
+    consistent = abs((pti - ti) / pti - gain) <= 0.02
+m = data['memory']['max_peak_reserved_gib']
+pm = p['memory']['max_peak_reserved_gib']
+mdelta = None
+if m != None and pm != None:
+    mdelta = round(m - pm, 3)
+return {'parent': True, 'comparable': True, 'step_time_rel_gain': round(gain, 5), 'inter_step_rel_gain': igain, 'inter_step_consistent': consistent, 'peak_reserved_delta_gib': mdelta}

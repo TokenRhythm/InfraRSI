@@ -1,0 +1,817 @@
+{
+ "source": "qa_trials/trials_tb/Q9U-code-env-opus, run q9-unicom1-code-env-opus-20261028-112243 (strategy hls, Opus 5.5 at capability 0.9; FABLE_DESIGN_SEARCH_FIX section 4)",
+ "capability": 0.9,
+ "knobs": {
+  "optim": [
+   "adamw_torch",
+   "adamw_torch_fused"
+  ],
+  "use_liger_kernel": [
+   false,
+   true
+  ],
+  "torch_compile": [
+   false,
+   true
+  ],
+  "gradient_checkpointing": [
+   false,
+   true
+  ],
+  "tf32": [
+   false,
+   true
+  ],
+  "dataloader_num_workers": [
+   0,
+   2,
+   4,
+   8
+  ],
+  "dataloader_pin_memory": [
+   false,
+   true
+  ],
+  "per_device_train_batch_size": [
+   1,
+   2
+  ],
+  "gradient_accumulation_steps": [
+   2,
+   1
+  ],
+  "fsdp_config": [
+   "fsdp_v2.json",
+   "fsdp_v2_noreshard.json"
+  ],
+  "PYTORCH_CUDA_ALLOC_CONF": [
+   "",
+   "expandable_segments:True"
+  ],
+  "NCCL_NVLS_ENABLE": [
+   "2",
+   "0"
+  ]
+ },
+ "reference": {
+  "optim": "adamw_torch",
+  "use_liger_kernel": false,
+  "torch_compile": false,
+  "gradient_checkpointing": true,
+  "tf32": false,
+  "dataloader_num_workers": 2,
+  "dataloader_pin_memory": true,
+  "per_device_train_batch_size": 1,
+  "gradient_accumulation_steps": 2,
+  "fsdp_config": "fsdp_v2.json",
+  "PYTORCH_CUDA_ALLOC_CONF": "",
+  "NCCL_NVLS_ENABLE": "2"
+ },
+ "invariant": "per_device_train_batch_size * gradient_accumulation_steps == 2",
+ "c0": {
+  "step_time": 1.5246046543121339,
+  "gpu_hours": 0.3084791666666667
+ },
+ "review": {
+  "mechanism": "review: train_patches.py: The job log says causal_conv1d_fn falls back to its slow reference PyTorch implementation because the causal_conv1d package is not installed. That cost runs in every gated-de",
+  "pct": 5.0,
+  "unc": 5.0,
+  "p": 0.7,
+  "change_class": "execution",
+  "moves": [
+   "conv"
+  ]
+ },
+ "calls": {
+  "c0": [
+   {
+    "mechanism": "micro-batch 2 with no gradient accumulation: same global batch of 16 (8 GPUs x 2 x 1), half as many forward/backward pas",
+    "change": {
+     "per_device_train_batch_size": 2,
+     "gradient_accumulation_steps": 1
+    },
+    "pct": 6.0,
+    "unc": 5.0,
+    "p": 0.85,
+    "change_class": "numerics",
+    "patch": false,
+    "moves": [
+     "mbs2"
+    ]
+   },
+   {
+    "mechanism": "Liger kernels: fused linear + cross-entropy (no materialized 248k-vocab fp32 logits), fused RMSNorm and SwiGLU",
+    "change": {
+     "use_liger_kernel": true
+    },
+    "pct": 4.0,
+    "unc": 4.0,
+    "p": 0.6,
+    "change_class": "numerics",
+    "patch": false,
+    "moves": [
+     "liger"
+    ]
+   },
+   {
+    "mechanism": "expandable_segments allocator: less fragmentation and fewer cudaMalloc/free calls and cache flushes from the varying-siz",
+    "change": {
+     "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"
+    },
+    "pct": 1.0,
+    "unc": 1.5,
+    "p": 0.97,
+    "change_class": "execution",
+    "patch": false,
+    "moves": [
+     "exp"
+    ]
+   },
+   {
+    "mechanism": "TF32 for any remaining fp32 matmuls/convs (e.g. fp32 parts of the gated-delta-net path, the reference causal-conv fallba",
+    "change": {
+     "tf32": true
+    },
+    "pct": 0.5,
+    "unc": 1.0,
+    "p": 0.99,
+    "change_class": "numerics",
+    "patch": false,
+    "moves": [
+     "tf32"
+    ]
+   },
+   {
+    "mechanism": "disable NVLS (NVLink SHARP) collectives for the FSDP all-gather/reduce-scatter",
+    "change": {
+     "NCCL_NVLS_ENABLE": "0"
+    },
+    "pct": 0.3,
+    "unc": 1.0,
+    "p": 0.97,
+    "change_class": "execution",
+    "patch": false,
+    "moves": [
+     "nvls"
+    ]
+   },
+   {
+    "mechanism": "more dataloader workers to hide batch collation and host-to-device prep behind the step",
+    "change": {
+     "dataloader_num_workers": 4
+    },
+    "pct": 0.3,
+    "unc": 0.8,
+    "p": 0.99,
+    "change_class": "execution",
+    "patch": false,
+    "moves": [
+     "workers4"
+    ]
+   },
+   {
+    "mechanism": "prefer the cuDNN SDPA backend (fastest on H200) for the full-attention layers, falling back to flash/efficient/math when",
+    "change": {},
+    "pct": 0.7,
+    "unc": 1.5,
+    "p": 0.85,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "sdpa"
+    ]
+   }
+  ],
+  "c1": [
+   {
+    "mechanism": "Drop activation recompute, with expandable_segments so the larger no-recompute activation set fits without fragmentation",
+    "change": {
+     "gradient_checkpointing": false,
+     "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"
+    },
+    "pct": 20.0,
+    "unc": 7.0,
+    "p": 0.8,
+    "change_class": "execution",
+    "patch": false,
+    "moves": [
+     "gc",
+     "exp"
+    ]
+   },
+   {
+    "mechanism": "Drop activation recompute and enable Liger, whose fused linear+CE avoids the 248k-vocab fp32 logits so the no-recompute ",
+    "change": {
+     "gradient_checkpointing": false,
+     "use_liger_kernel": true
+    },
+    "pct": 23.0,
+    "unc": 9.0,
+    "p": 0.65,
+    "change_class": "numerics",
+    "patch": false,
+    "moves": [
+     "gc",
+     "liger"
+    ]
+   },
+   {
+    "mechanism": "Drop activation recompute at micro-batch 1 x 2 accumulation in case micro-batch 2 without recompute does not fit",
+    "change": {
+     "gradient_checkpointing": false,
+     "per_device_train_batch_size": 1,
+     "gradient_accumulation_steps": 2
+    },
+    "pct": 12.0,
+    "unc": 6.0,
+    "p": 0.93,
+    "change_class": "numerics",
+    "patch": false,
+    "moves": [
+     "gc",
+     "mbs1"
+    ]
+   },
+   {
+    "mechanism": "Selective activation checkpointing: inside each checkpointed decoder layer, save matmul and SDPA outputs and recompute o",
+    "change": {},
+    "pct": 12.0,
+    "unc": 6.0,
+    "p": 0.6,
+    "change_class": "execution",
+    "patch": true,
+    "moves": [
+     "sel_ckpt"
+    ]
+   },
+   {
+    "mechanism": "Partial checkpointing: keep recompute on every other decoder layer and turn it off on the rest, halving the recompute co",
+    "change": {},
+    "pct": 10.0,
+    "unc": 5.0,
+    "p": 0.85,
+    "change_class": "execution",
+    "patch": true,
+    "moves": [
+     "part_ckpt"
+    ]
+   },
+   {
+    "mechanism": "Skip lm_head logits and cross-entropy for positions whose (shifted) label is -100: pass the kept positions as logits_to_",
+    "change": {},
+    "pct": 2.5,
+    "unc": 3.0,
+    "p": 0.7,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "skip100"
+    ]
+   },
+   {
+    "mechanism": "Liger Triton cross-entropy as the ForCausalLM loss: one pass over the bf16 logits with the gradient written in place, in",
+    "change": {},
+    "pct": 1.0,
+    "unc": 1.0,
+    "p": 0.8,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "liger_ce"
+    ]
+   },
+   {
+    "mechanism": "Regional torch.compile of the decoder's RMSNorm and SwiGLU MLP modules, fusing the fp32 upcast/pow/mean/rsqrt/scale and ",
+    "change": {},
+    "pct": 2.5,
+    "unc": 2.5,
+    "p": 0.7,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "reg_compile"
+    ]
+   }
+  ],
+  "c3": [
+   {
+    "mechanism": "Liger fused linear+cross-entropy patched directly into the Qwen3.5/Qwen3-Next ForCausalLM.forward. Hidden states are shi",
+    "change": {},
+    "pct": 3.5,
+    "unc": 3.0,
+    "p": 0.55,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "flce"
+    ]
+   },
+   {
+    "mechanism": "Shard lm_head and the input embedding as their own FSDP2 units, outside the root. Each is about 1B parameters, about 2 G",
+    "change": {},
+    "pct": 1.0,
+    "unc": 1.2,
+    "p": 0.6,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "lm_head"
+    ]
+   },
+   {
+    "mechanism": "Gradient-norm clipping on the FSDP2 local shards. One _foreach_norm over the local tensors, one fp32 all-reduce of the s",
+    "change": {},
+    "pct": 0.6,
+    "unc": 1.2,
+    "p": 0.7,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "clip"
+    ]
+   },
+   {
+    "mechanism": "High-priority NCCL streams (TORCH_NCCL_HIGH_PRIORITY=1, set at import, before the process group is created). FSDP2 all-g",
+    "change": {},
+    "pct": 0.3,
+    "unc": 0.8,
+    "p": 0.95,
+    "change_class": "execution",
+    "patch": true,
+    "moves": [
+     "nccl"
+    ]
+   }
+  ],
+  "c8": [
+   {
+    "mechanism": "Reduce-scatter FSDP2 gradients in bf16 instead of fp32. When accelerate gives FSDP2 fp32 master parameters with param_dt",
+    "change": {},
+    "pct": 1.0,
+    "unc": 1.5,
+    "p": 0.85,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "bf16"
+    ]
+   },
+   {
+    "mechanism": "Run AdamW's foreach/fused kernels on the local shard tensors of the FSDP2 DTensors. This skips per-op DTensor dispatch a",
+    "change": {},
+    "pct": 0.4,
+    "unc": 0.6,
+    "p": 0.85,
+    "change_class": "execution",
+    "patch": true,
+    "moves": [
+     "adam_local"
+    ]
+   },
+   {
+    "mechanism": "Skip accelerate's convert_outputs_to_fp32 copy of the bf16 logits during training. The autocast wrapper upcasts every ha",
+    "change": {},
+    "pct": 0.35,
+    "unc": 0.4,
+    "p": 0.85,
+    "change_class": "execution",
+    "patch": true,
+    "moves": [
+     "skip_fp32"
+    ]
+   },
+   {
+    "mechanism": "Cap the SMs NCCL takes during overlapped FSDP2 all-gather/reduce-scatter (NCCL_MAX_CTAS=16, set at import before the fir",
+    "change": {},
+    "pct": 0.3,
+    "unc": 1.0,
+    "p": 0.92,
+    "change_class": "execution",
+    "patch": true,
+    "moves": [
+     "ctas"
+    ]
+   }
+  ],
+  "c2": [
+   {
+    "mechanism": "cuDNN autotuning (cudnn.benchmark) for the depthwise causal Conv1d that the gated-delta-net layers run through the refer",
+    "change": {},
+    "pct": 0.8,
+    "unc": 1.5,
+    "p": 0.95,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "cudnn"
+    ]
+   },
+   {
+    "mechanism": "Regional torch.compile of the GatedDeltaNet module's glue: in_proj splits and reshapes, the conv+SiLU fallback, g = -exp",
+    "change": {},
+    "pct": 2.0,
+    "unc": 2.5,
+    "p": 0.65,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "gdn_compile"
+    ]
+   },
+   {
+    "mechanism": "Per-decoder-layer regional torch.compile (torchtitan style). Every decoder layer's forward is compiled as one region: no",
+    "change": {},
+    "pct": 5.0,
+    "unc": 5.0,
+    "p": 0.55,
+    "change_class": "numerics",
+    "patch": true,
+    "moves": [
+     "layer_compile"
+    ]
+   },
+   {
+    "mechanism": "Explicit FSDP2 prefetch two layers ahead, both forward (next two blocks) and backward (previous two blocks), instead of ",
+    "change": {},
+    "pct": 0.4,
+    "unc": 0.6,
+    "p": 0.85,
+    "change_class": "execution",
+    "patch": true,
+    "moves": [
+     "prefetch"
+    ]
+   },
+   {
+    "mechanism": "Python GC pauses: freeze the import-time object graph and raise the gen0 threshold. Collections in the Trainer and autog",
+    "change": {},
+    "pct": 0.3,
+    "unc": 0.5,
+    "p": 0.97,
+    "change_class": "execution",
+    "patch": true,
+    "moves": [
+     "gc_freeze"
+    ]
+   }
+  ]
+ },
+ "judgment": [
+  {
+   "knob": "gradient_checkpointing",
+   "change": {
+    "gradient_checkpointing": false
+   },
+   "sign": "+",
+   "p_feasible": 0.9,
+   "expected_gain_pct": 22
+  },
+  {
+   "knob": "torch_compile",
+   "change": {
+    "torch_compile": true
+   },
+   "sign": "+",
+   "p_feasible": 0.78,
+   "expected_gain_pct": 18
+  },
+  {
+   "knob": "use_liger_kernel",
+   "change": {
+    "use_liger_kernel": true
+   },
+   "sign": "+",
+   "p_feasible": 0.72,
+   "expected_gain_pct": 6
+  },
+  {
+   "knob": "fsdp_config",
+   "change": {
+    "fsdp_config": "fsdp_v2_noreshard.json"
+   },
+   "sign": "+",
+   "p_feasible": 0.9,
+   "expected_gain_pct": 4
+  },
+  {
+   "knob": "per_device_train_batch_size",
+   "change": {
+    "per_device_train_batch_size": 2
+   },
+   "sign": "+",
+   "p_feasible": 0.9,
+   "expected_gain_pct": 5
+  },
+  {
+   "knob": "optim",
+   "change": {
+    "optim": "adamw_torch_fused"
+   },
+   "sign": "+",
+   "p_feasible": 0.9,
+   "expected_gain_pct": 1.5
+  },
+  {
+   "knob": "gradient_accumulation_steps",
+   "change": {
+    "gradient_accumulation_steps": 1
+   },
+   "sign": "-",
+   "p_feasible": 0.9,
+   "expected_gain_pct": -2
+  },
+  {
+   "knob": "tf32",
+   "change": {
+    "tf32": true
+   },
+   "sign": "0",
+   "p_feasible": 0.9,
+   "expected_gain_pct": 0.2
+  },
+  {
+   "knob": "PYTORCH_CUDA_ALLOC_CONF",
+   "change": {
+    "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True"
+   },
+   "sign": "0",
+   "p_feasible": 0.9,
+   "expected_gain_pct": 0.3
+  },
+  {
+   "knob": "dataloader_num_workers",
+   "change": {
+    "dataloader_num_workers": 4
+   },
+   "sign": "0",
+   "p_feasible": 0.9,
+   "expected_gain_pct": 0
+  },
+  {
+   "knob": "dataloader_pin_memory",
+   "change": {
+    "dataloader_pin_memory": false
+   },
+   "sign": "0",
+   "p_feasible": 0.9,
+   "expected_gain_pct": -0.1
+  },
+  {
+   "knob": "NCCL_NVLS_ENABLE",
+   "change": {
+    "NCCL_NVLS_ENABLE": "0"
+   },
+   "sign": "0",
+   "p_feasible": 0.9,
+   "expected_gain_pct": -0.5
+  }
+ ],
+ "composite": {
+  "members": [
+   "gradient_checkpointing",
+   "torch_compile",
+   "fsdp_config",
+   "optim"
+  ],
+  "change": {
+   "gradient_checkpointing": false,
+   "torch_compile": true,
+   "fsdp_config": "fsdp_v2_noreshard.json",
+   "optim": "adamw_torch_fused"
+  },
+  "gain": null,
+  "warnings": [],
+  "source": "llm"
+ },
+ "screens": [
+  {
+   "candidate_id": "c1",
+   "fidelity": "full",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.2758763888888889,
+   "step_time": 1.4113883972167969
+  },
+  {
+   "candidate_id": "c2",
+   "fidelity": "full",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.3063675,
+   "step_time": 1.1402727007865905
+  },
+  {
+   "candidate_id": "c3",
+   "fidelity": "probe",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.23549777777777778,
+   "step_time": 1.747668981552124
+  },
+  {
+   "candidate_id": "c3",
+   "fidelity": "full",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.24978555555555554,
+   "step_time": 1.0606220483779907
+  },
+  {
+   "candidate_id": "c4",
+   "fidelity": "full",
+   "valid": false,
+   "aborted": true,
+   "gpu_hours": 0.25570444444444446,
+   "step_time": 1.0746690143238415
+  },
+  {
+   "candidate_id": "c5",
+   "fidelity": "full",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.26362305555555554,
+   "step_time": 1.059247899055481
+  },
+  {
+   "candidate_id": "c6",
+   "fidelity": "full",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.24245666666666668,
+   "step_time": 1.0598270058631898
+  },
+  {
+   "candidate_id": "c7",
+   "fidelity": "full",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.2882861111111111,
+   "step_time": 1.060059654712677
+  },
+  {
+   "candidate_id": "c8",
+   "fidelity": "full",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.29524722222222227,
+   "step_time": 1.0276869058609008
+  },
+  {
+   "candidate_id": "c9",
+   "fidelity": "full",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.2924925,
+   "step_time": 1.0261054515838623
+  },
+  {
+   "candidate_id": "c10",
+   "fidelity": "full",
+   "valid": true,
+   "aborted": false,
+   "gpu_hours": 0.2572236111111111,
+   "step_time": 1.0306864500045776
+  }
+ ],
+ "decisions": [
+  {
+   "best_value_per_cost": 0.1137,
+   "best_mechanism": "micro-batch 2 with no gradient accumulation: same global bat",
+   "best_mu": 0.0382,
+   "sigma_run": 0.0115,
+   "n_open": 13
+  },
+  {
+   "best_value_per_cost": 0.4353,
+   "best_mechanism": "Drop activation recompute, with expandable_segments so the l",
+   "best_mu": 0.1499,
+   "sigma_run": 0.0079,
+   "n_open": 13
+  },
+  {
+   "best_value_per_cost": 0.1093,
+   "best_mechanism": "review: train_patches.py: The job log says causal_conv1d_fn ",
+   "best_mu": 0.0427,
+   "sigma_run": 0.0044,
+   "n_open": 9
+  },
+  {
+   "best_value_per_cost": 0.07,
+   "best_mechanism": "Liger fused linear+cross-entropy patched directly into the Q",
+   "best_mu": 0.0328,
+   "sigma_run": 0.0037,
+   "n_open": 7
+  },
+  {
+   "best_value_per_cost": 0.0235,
+   "best_mechanism": "Shard lm_head and the input embedding as their own FSDP2 uni",
+   "best_mu": 0.0091,
+   "sigma_run": 0.0037,
+   "n_open": 6
+  },
+  {
+   "best_value_per_cost": 0.0211,
+   "best_mechanism": "Gradient-norm clipping on the FSDP2 local shards. One _forea",
+   "best_mu": 0.0055,
+   "sigma_run": 0.0033,
+   "n_open": 5
+  },
+  {
+   "best_value_per_cost": 0.0179,
+   "best_mechanism": "High-priority NCCL streams (TORCH_NCCL_HIGH_PRIORITY=1, set ",
+   "best_mu": 0.0028,
+   "sigma_run": 0.0031,
+   "n_open": 4
+  },
+  {
+   "best_value_per_cost": 0.0145,
+   "best_mechanism": "experience:fsdp_config",
+   "best_mu": 0.0,
+   "sigma_run": 0.003,
+   "n_open": 3
+  },
+  {
+   "best_value_per_cost": 0.0371,
+   "best_mechanism": "Reduce-scatter FSDP2 gradients in bf16 instead of fp32. When",
+   "best_mu": 0.0093,
+   "sigma_run": 0.0029,
+   "n_open": 6
+  },
+  {
+   "best_value_per_cost": 0.0191,
+   "best_mechanism": "Cap the SMs NCCL takes during overlapped FSDP2 all-gather/re",
+   "best_mu": 0.0028,
+   "sigma_run": 0.0028,
+   "n_open": 5
+  }
+ ],
+ "kappa": 0.9237,
+ "chain": [
+  {
+   "candidate": "c0",
+   "step_time": 1.5246046543121339,
+   "status": "screened",
+   "valid": true
+  },
+  {
+   "candidate": "c1",
+   "step_time": 1.4113883972167969,
+   "status": "screened",
+   "valid": true
+  },
+  {
+   "candidate": "c2",
+   "step_time": 1.1402727007865905,
+   "status": "screened",
+   "valid": true
+  },
+  {
+   "candidate": "c3",
+   "step_time": 1.0606220483779907,
+   "status": "screened",
+   "valid": true
+  },
+  {
+   "candidate": "c4",
+   "step_time": 1.0746690143238415,
+   "status": "aborted",
+   "valid": false
+  },
+  {
+   "candidate": "c5",
+   "step_time": 1.059247899055481,
+   "status": "screened",
+   "valid": true
+  },
+  {
+   "candidate": "c6",
+   "step_time": 1.0598270058631898,
+   "status": "screened",
+   "valid": true
+  },
+  {
+   "candidate": "c7",
+   "step_time": 1.060059654712677,
+   "status": "screened",
+   "valid": true
+  },
+  {
+   "candidate": "c8",
+   "step_time": 1.0276869058609008,
+   "status": "screened",
+   "valid": true
+  },
+  {
+   "candidate": "c9",
+   "step_time": 1.0261054515838623,
+   "status": "screened",
+   "valid": true
+  },
+  {
+   "candidate": "c10",
+   "step_time": 1.0306864500045776,
+   "status": "screened",
+   "valid": true
+  }
+ ]
+}

@@ -1,0 +1,33 @@
+schema: infrarsi-project-v1
+name: toy-cpu
+launch:
+  command: "{python} train.py --config {config} --steps {steps} {args}"
+  timeout_s: 120
+config: {file: config.yaml}
+knobs:
+  micro_batch_size: {type: int, choices: [1, 2, 4, 8], path: train.micro_batch_size}
+  grad_accum: {type: int, choices: [1, 2, 4, 8], path: train.grad_accum}
+  fused_optimizer: {type: bool, path: train.fused_optimizer}
+  workers: {type: int, choices: [1, 2, 4], flag: --workers, default: 1}
+  precision: {type: str, choices: [fp32, bf16, fp8], path: train.precision}
+  compile: {type: bool, flag: --compile}
+code:
+  mutable: [kernels.py]
+  frozen: [loss.py]
+  readable: [train.py, config.yaml]
+workload:
+  steps: 24
+  window: [9, 24]
+  invariants:
+    global_batch: micro_batch_size * grad_accum
+checkpoint:
+  save: "--save {ckpt_dir} --save-at {save_at}"
+  resume: "--load {ckpt_dir}"
+  save_at: 12
+hardware: {gpus: 1, memory_gib: 16}
+verify:
+  tolerance: 0.03
+  tests: ["{python} check.py"]
+  eval: "{python} eval.py --load {ckpt_dir}"
+search:
+  budget: {screens: 12, wall_hours: 0.5}

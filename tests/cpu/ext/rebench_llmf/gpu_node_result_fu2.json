@@ -1,0 +1,121 @@
+{
+ "node": "WINH1",
+ "gpus": "0,1,2,3",
+ "uid": 64102,
+ "judge": {
+  "message": {
+   "maximum_allowed_norm_diff": 5.3,
+   "execution_time": 215.611807,
+   "norm_diff": 4.2190143208893005,
+   "max_scalar_diff": 0.00048828125
+  },
+  "timestamp": "2026-10-21T07:43:05",
+  "score": 5.373479600986214
+ },
+ "exit_code": 0,
+ "timed_out": false,
+ "outputs": {
+  "trained_model": true
+ },
+ "reference": {
+  "path": "/data/infrarsi/ext/runs/rebench_llmf/x2_fu2_verify_20261020_234021/ref/trained_model_reference",
+  "tree_digest": "ff6d36633fa1416e860cb1dc393264c207d8df3d14617f4b4889e226308ab03e",
+  "outside_agent_tree": true,
+  "mode": "700",
+  "owner": 0
+ },
+ "base": {
+  "ok": true,
+  "tree_digest": "587d006aa6f4829e0a3da449e77bdcc6bb633aba3ef308ab76f8036e9a1b10ad",
+  "cached": true,
+  "reason": null
+ },
+ "frozen_before": {
+  "score.py": "27803f2c25bdf34287f04189e0a4930b93db412eafcf1ee09129834a225ffa17",
+  "train_data.jsonl": "8d2def6bcae096798cbff5c69fb5817599f80d0dab8548bd76b61c3faeb159d8",
+  "env.sh": "04e9c4025da07b15cc7d58ba9483a1f7594b7c0e7e8e4ed197c83df911fed3ac",
+  "base_model.pytorch_model.bin": "a400155e495b4d6b1cd5b05f04c56032b7dbc6bdff940e046a89ffc1cc2fbdcd",
+  "base_model.config.json": "aae6fb3378d48735b5f1f7f0046b57e7fd7735ca049ac3fad29ce2c2f37ed1e8"
+ },
+ "frozen_after": {
+  "score.py": "27803f2c25bdf34287f04189e0a4930b93db412eafcf1ee09129834a225ffa17",
+  "train_data.jsonl": "8d2def6bcae096798cbff5c69fb5817599f80d0dab8548bd76b61c3faeb159d8",
+  "env.sh": "04e9c4025da07b15cc7d58ba9483a1f7594b7c0e7e8e4ed197c83df911fed3ac",
+  "base_model.pytorch_model.bin": "a400155e495b4d6b1cd5b05f04c56032b7dbc6bdff940e046a89ffc1cc2fbdcd",
+  "base_model.config.json": "aae6fb3378d48735b5f1f7f0046b57e7fd7735ca049ac3fad29ce2c2f37ed1e8"
+ },
+ "env_sh": {
+  "uid": 0,
+  "mode": "644",
+  "regular": true
+ },
+ "g3": {
+  "trained_vs_base": 23.774654834269313,
+  "ref_vs_base": 23.777150649635587
+ },
+ "g4": null,
+ "g5": {
+  "checkpoint_present": true,
+  "epoch": 1,
+  "batches": 62,
+  "samples": 992,
+  "param_shapes_match": null
+ },
+ "g8": {
+  "trained_present": true,
+  "escapes": [],
+  "ok": true
+ },
+ "g9": {
+  "ok": true,
+  "path": "/data/infrarsi/ext/runs/rebench_llmf/x2_fu2_verify_20261020_234021/judge/models/a2746637b9ca8_cand/trained_model",
+  "tree_digest": "2a74b15e0ece5516edecb60bdf23e5a41d4d2da4926913e6c3260a9ed6f29300",
+  "kind": "st",
+  "n_tensors": 219,
+  "source_files": [
+   "model.safetensors"
+  ]
+ },
+ "phases": {
+  "data_prep": 9.069,
+  "train": 177.811,
+  "convert": 26.32,
+  "total": 215.611807
+ },
+ "snapshot": null,
+ "tree_digest": "78bfd7d0ba7bef1e9be5edc97dda470a559f73f53045e55cd1254b8fc729212b",
+ "clean_slate": false,
+ "kills": [
+  {
+   "uid": 64102,
+   "clean": true,
+   "rounds": 0
+  },
+  {
+   "uid": 64102,
+   "clean": true,
+   "rounds": 0
+  },
+  {
+   "uid": 64102,
+   "clean": true,
+   "rounds": 0
+  }
+ ],
+ "remaining_uid_processes": {
+  "64100": 0,
+  "64102": 0
+ },
+ "utc_start": "2026-10-20T23:42:57.162011+00:00",
+ "utc_end": "2026-10-20T23:47:13.226782+00:00",
+ "wall_s": 256.064306974411,
+ "cost": {
+  "gpu_seconds": 1024.3,
+  "wall_seconds": 256.1
+ },
+ "env_versions": {
+  "python": "3.11.5",
+  "torch": "2.3.0+cu121",
+  "transformers": "4.40.2"
+ }
+}

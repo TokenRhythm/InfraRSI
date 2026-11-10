@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "infrarsi-exp/1/line",
+  "title": "One line of an InfraRSI experience pack (infrarsi-exp/1)",
+  "type": "object",
+  "required": ["kind", "id"],
+  "properties": {
+    "kind": {"enum": ["pack", "env", "observation", "effect", "constraint", "rule", "judgment"]},
+    "id": {"type": "string", "minLength": 1, "maxLength": 128},
+    "tier": {"enum": ["verified", "measured", "reported"]},
+    "method": {"enum": ["infrarsi", "paired_runs", "independent_runs", "estimate", "reported"]},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "note": {"type": "string", "maxLength": 1000}
+  },
+  "$defs": {
+    "config": {
+      "type": "object",
+      "description": "mechanism id -> state; ids from mechanisms.yaml or prefixed x-",
+      "propertyNames": {"pattern": "^(x-[a-z0-9-]+|[a-z][a-z0-9_]*)$"},
+      "additionalProperties": {"type": "string"}
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {"type": ["string", "number", "boolean"]},
+          {"type": "array"},
+          {"type": "object", "properties": {"min": {"type": "number"}, "max": {"type": "number"}}, "additionalProperties": false}
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "pack"}}},
+     "then": {"required": ["schema", "pack_id", "title", "license", "tier"],
+              "properties": {"schema": {"const": "infrarsi-exp/1"}, "pack_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,80}$"},
+                             "title": {"type": "string"}, "license": {"type": "string"}, "contributors": {"type": "array", "items": {"type": "string"}},
+                             "created": {"type": "string"}, "summary": {"type": "string"}}}},
+    {"if": {"properties": {"kind": {"const": "env"}}},
+     "then": {"required": ["gpu", "gpus_per_node", "nodes", "framework", "model", "workload"],
+              "properties": {"gpu": {"type": "string"}, "gpus_per_node": {"type": "integer", "minimum": 1},
+                             "nodes": {"type": "integer", "minimum": 1},
+                             "interconnect": {"type": "object"},
+                             "framework": {"enum": ["megatron", "fsdp", "deepspeed", "torchtitan", "hf_trainer", "accelerate", "lightning", "pytorch", "other"]},
+                             "versions": {"type": "object", "additionalProperties": {"type": "string"}},
+                             "model": {"type": "object", "required": ["params_b"],
+                                       "properties": {"family": {"enum": ["dense", "moe"]}, "params_b": {"type": "number", "exclusiveMinimum": 0},
+                                                      "active_params_b": {"type": "number", "exclusiveMinimum": 0}}},
+                             "workload": {"type": "object", "required": ["seq_len"],
+                                          "properties": {"seq_len": {"type": "integer", "minimum": 1},
+                                                         "global_batch_tokens": {"type": "integer", "minimum": 1},
+                                                         "data": {"enum": ["real", "mock", "synthetic"]}}},
+                             "noise_pct": {"type": "number", "minimum": 0}}}},
+    {"if": {"properties": {"kind": {"const": "observation"}}},
+     "then": {"required": ["env", "config", "status"],
+              "properties": {"env": {"type": "string"}, "config": {"$ref": "#/$defs/config"},
+                             "status": {"enum": ["ok", "oom", "crash", "invalid"]},
+                             "step_time_s": {"type": "number", "exclusiveMinimum": 0},
+                             "tokens_per_s_per_gpu": {"type": "number", "exclusiveMinimum": 0},
+                             "mem_peak_gib": {"type": "number", "minimum": 0}, "window_steps": {"type": "integer", "minimum": 1},
+                             "message": {"type": "string", "maxLength": 500}},
+              "if": {"properties": {"status": {"const": "ok"}}},
+              "then": {"anyOf": [{"required": ["step_time_s"]}, {"required": ["tokens_per_s_per_gpu"]}]}}},
+    {"if": {"properties": {"kind": {"const": "effect"}}},
+     "then": {"required": ["env", "change", "speedup"],
+              "properties": {"env": {"type": "string"}, "base": {"$ref": "#/$defs/config"},
+                             "change": {"type": "object", "minProperties": 1,
+                                        "propertyNames": {"pattern": "^(x-[a-z0-9-]+|[a-z][a-z0-9_]*)$"},
+                                        "additionalProperties": {"type": "array", "prefixItems": [{"type": "string"}, {"type": "string"}],
+                                                                 "minItems": 2, "maxItems": 2}},
+                             "speedup": {"type": "number", "exclusiveMinimum": 0},
+                             "ci": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+                             "n": {"type": "integer", "minimum": 1}, "noise_pct": {"type": "number", "minimum": 0}}}},
+    {"if": {"properties": {"kind": {"const": "constraint"}}},
+     "then": {"required": ["when", "symptom"],
+              "properties": {"scope": {"$ref": "#/$defs/scope"}, "when": {"$ref": "#/$defs/config"},
+                             "symptom": {"enum": ["oom", "crash", "invalid", "slow"]},
+                             "message": {"type": "string", "maxLength": 500}, "fix": {"type": "string", "maxLength": 500}}}},
+    {"if": {"properties": {"kind": {"const": "rule"}}},
+     "then": {"required": ["text"],
+              "properties": {"scope": {"$ref": "#/$defs/scope"}, "text": {"type": "string", "maxLength": 2000},
+                             "confidence": {"enum": ["high", "medium", "low"]}}}},
+    {"if": {"properties": {"kind": {"const": "judgment"}}},
+     "then": {"required": ["assessment"],
+              "properties": {"model": {"type": ["string", "null"]}, "target_gpu": {"type": ["string", "null"]},
+                             "source_envs": {"type": "array", "items": {"type": "string"}},
+                             "source_gpus": {"type": "array", "items": {"type": "string"}},
+                             "assessment": {"type": "array", "items": {"type": "object", "required": ["change", "sign"]}},
+                             "scores": {"type": "object"}, "start_config": {"type": "object"}}}}
+  ]
+}
