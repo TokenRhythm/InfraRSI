@@ -108,6 +108,16 @@ infrarsi apply --write
 
 各阶段说明见[五步工作流程](https://infrarsi.github.io/?lang=zh#workflow)，完整参数见 [CLI 文档](https://infrarsi.github.io/?lang=zh#cli)。
 
+### 4. 也可以交给 Claude Code / Codex 会话来做
+
+安装 `infrarsi-optimize` 这个 Skill，在训练项目里打开会话，让它把任务调快：
+
+```bash
+python agent_skill/install_skill.py
+```
+
+会话负责适配代码库并和你沟通；运行、检查和报告仍由同一个引擎完成；搜索提出的每个问题由会话自己模型的一个全新子代理回答，不需要配置 API。详见 [agent_skill/README_ZH.md](agent_skill/README_ZH.md)。
+
 ## 🧭 运行前后与运行中
 
 - **启动清单：** 默认六项，**回车开始**，输入编号修改，`more` 展开高级选项，`q` 退出。`--yes` 跳过提问并禁用实时对话。

@@ -108,6 +108,16 @@ infrarsi apply --write
 
 See the [five-stage workflow](https://infrarsi.github.io/#workflow) and [CLI reference](https://infrarsi.github.io/#cli) for details.
 
+### 4. Or let a Claude Code / Codex session drive it
+
+Install the `infrarsi-optimize` skill, open a session in your training repository and ask it to make the job faster:
+
+```bash
+python agent_skill/install_skill.py
+```
+
+The session adapts the project and talks to you; the same engine runs, checks and reports; each question the search asks is answered by a fresh sub-agent of the session's own model, so no API key is needed. See [agent_skill/README.md](agent_skill/README.md).
+
 ## 🧭 Before and During a Run
 
 - **Checklist:** Review six settings; **Enter starts**, a number edits, `more` opens advanced options, and `q` quits. `--yes` skips prompts and disables live chat.

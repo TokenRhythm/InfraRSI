@@ -1,0 +1,4 @@
+interface:
+  display_name: "InfraRSI Optimize"
+  short_description: "Make an existing GPU training job faster, with every change measured and verified"
+  default_prompt: "Use $infrarsi-optimize to speed up this training job without changing what it trains."

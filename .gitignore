@@ -5,6 +5,9 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
+# The built skill (agent_skill/build_skill.py): the skill's files plus a copy of infrarsi/
+agent_skill/dist/
+
 # Pinned Claude Code CLI binary (about 295 MB)
 .cli/
 
