@@ -710,7 +710,9 @@ def run_project(project: Project, *, strategy: str | None = None, driver=None, o
                'accounting': acc, 'phase_cap': bool(sc.get('phase_cap')),
                'progress': log,                         # a console line per finished run (U-1-14; only this flow)
                'on_interrupt': on_interrupt or sc.get('on_interrupt') or 'verify',
-               'control': console.poll if live else None}
+               # a run a coding-agent session drives has no terminal: its stop and its notes come through the session's
+               # files (agent/backends/session.SessionControl), read at the boundaries the live console is read at
+               'control': console.poll if live else getattr(getattr(driver, 'session_control', None), 'poll', None)}
     if options['ablate']:
         log(f'[infrarsi] ablation: {", ".join(options["ablate"])} off')
     ctx = search.Context(task=task, budget=task.search_budget(**(budget or {})), start_config=ref_cfg, runner=runner,

@@ -10,6 +10,9 @@
                              base_url may name environment variables ($VLLM_URL)
     vllm:model               a self-hosted vLLM/SGLang server (llm.base_url, default http://127.0.0.1:8000/v1); llm.extra_body
                              is merged into every request (e.g. {chat_template_kwargs: {enable_thinking: false}} for Qwen3)
+    session[:model]          the coding-agent session that started the run with `infrarsi agent start`: every call is a
+                             request its agent answers (agent/backends/session.py); model: the agent's model by name,
+                             read as any model name is for the capability
     none                     no LLM: the search runs without one (TPE / random)
 """
 from __future__ import annotations
@@ -60,6 +63,10 @@ def make_driver(spec, *, out_root=None):
     if kind in ('codex-cli', 'codex'):
         return CodexCLIBackend(model=model or 'default', out_root=out_root, max_retries=1,
                                effort=s.get('effort', 'high'), executable=s.get('executable'))
+    if kind == 'session':                                # the calls go to the session that started the run
+        from ..agent.backends.session import SessionBackend
+        return SessionBackend(directory=s.get('dir'), model=model, out_root=out_root, answer_timeout=s.get('timeout_s'),
+                              **({'max_attempts': int(s['max_attempts'])} if s.get('max_attempts') else {}))
     if kind in ('openai', 'openai-compat', 'vllm', 'deepseek'):
         if kind == 'deepseek':
             model = model or os.environ.get('INFRARSI_DEEPSEEK_MODEL', 'deepseek-chat')
@@ -96,10 +103,11 @@ def make_driver(spec, *, out_root=None):
                                    context_tokens=s.get('context_tokens'), extra_body=s.get('extra_body'),
                                    api=s.get('api', 'chat'), headers=s.get('headers'))
     raise ValueError(f'unknown llm backend {kind!r} (anthropic, claude-cli/claude, codex-cli/codex, deepseek, '
-                     'openai, openai-compat, vllm, none)')
+                     'openai, openai-compat, vllm, session, none)')
 
 
-BACKENDS = ('anthropic', 'claude-cli', 'claude', 'codex-cli', 'codex', 'deepseek', 'openai', 'openai-compat', 'vllm', 'none')
+BACKENDS = ('anthropic', 'claude-cli', 'claude', 'codex-cli', 'codex', 'deepseek', 'openai', 'openai-compat', 'vllm',
+            'session', 'none')
 
 
 def debate_settings(raw, *, enabled=None, second=None, verifier=None) -> dict:

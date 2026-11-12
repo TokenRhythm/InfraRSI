@@ -1272,6 +1272,14 @@ def cmd_finish(a):
     return _adopt(project, res, a, 'apply')
 
 
+def cmd_agent(a):
+    """A run driven from a coding-agent session (project/agent_session.py: start, next, answer, status, note, stop, resume)."""
+    from infrarsi.project.agent_session import AgentError, cli
+    try:
+        return cli(a.rest)
+    except AgentError as exc:
+        raise RequestError(str(exc)) from None
+
 
 def cmd_validate(a):
     from infrarsi.harness import observe, recheck_against, run_screen
@@ -1399,7 +1407,7 @@ def _version() -> str:
         return 'unknown (not installed)'
 
 
-ALL_CMDS = ('optimize', 'init', 'doctor', 'run', 'report', 'apply', 'finish', 'requirements', 'exp', *RESEARCH)
+ALL_CMDS = ('optimize', 'init', 'doctor', 'run', 'report', 'apply', 'finish', 'requirements', 'exp', 'agent', *RESEARCH)
 
 
 class _Parser(argparse.ArgumentParser):
@@ -1408,6 +1416,8 @@ class _Parser(argparse.ArgumentParser):
 
     def parse_args(self, args=None, namespace=None):
         raw = [str(x) for x in (sys.argv[1:] if args is None else args)]
+        if raw and raw[0] == 'agent':                    # its own parser reads the rest (an option first too: `agent -h`)
+            return argparse.Namespace(cmd='agent', rest=raw[1:], fn=cmd_agent)
         if raw and raw[0] not in ALL_CMDS and raw[0] not in ('-h', '--help', '--version'):
             raw = ['optimize', *raw]
         return super().parse_args(raw, namespace)
@@ -1419,7 +1429,8 @@ def build() -> argparse.ArgumentParser:
     ap = _Parser(prog='infrarsi', description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
                  epilog=f'research harness of the WINH UpdateBench matrix (not listed above): {", ".join(RESEARCH)}')
     ap.add_argument('--version', action='version', version=f'infrarsi {_version()}')
-    sub = ap.add_subparsers(dest='cmd', required=True, metavar='{optimize,init,doctor,run,report,apply,finish,requirements,exp}')
+    sub = ap.add_subparsers(dest='cmd', required=True,
+                            metavar='{optimize,init,doctor,run,report,apply,finish,requirements,exp,agent}')
     xp = 'experience packs to use: auto (all; default), off, or pack-id patterns (comma-separated, e.g. "h20-*")'
     mf = 'infrarsi.yaml or the directory that holds it (default: the current directory)'
     oi = ('what Ctrl-C / SIGTERM does during the search: verify (stop the search, re-verify the best candidates so far; a second '
@@ -1586,6 +1597,11 @@ def build() -> argparse.ArgumentParser:
     p.add_argument('--branch', help='git branch to write on (git repositories)')
     p.add_argument('-v', '--verbose', action='store_true', help='print every progress line, not only the milestones')
     p.set_defaults(fn=cmd_finish)
+    p = sub.add_parser('agent', add_help=False,
+                       help='a run driven from a coding-agent session (Claude Code, Codex): start, next, answer, status, '
+                            'note, stop, resume (`infrarsi agent -h`)')
+    p.add_argument('rest', nargs=argparse.REMAINDER)
+    p.set_defaults(fn=cmd_agent)
     p = sub.add_parser('discover')
     p.add_argument('--nodes')
     p.add_argument('--task')

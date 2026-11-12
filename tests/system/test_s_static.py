@@ -18,7 +18,7 @@ from infrarsi.verify.checklist import CHECKS
 
 REPO = Path(__file__).resolve().parents[2]
 README = (REPO / 'README.md').read_text(encoding='utf-8')
-PRODUCT = ('optimize', 'init', 'doctor', 'run', 'report', 'apply', 'finish', 'requirements', 'exp')
+PRODUCT = ('optimize', 'init', 'doctor', 'run', 'report', 'apply', 'finish', 'requirements', 'exp', 'agent')
 
 
 OPTIONAL = ('torch', 'transformers', 'paramiko', 'anthropic', 'optuna', 'numpy', 'megatron', 'deepspeed', 'vllm', 'safetensors')
@@ -46,7 +46,7 @@ def test_every_module_imports():
 
 def test_help_lists_the_product_commands_and_each_help_works():
     res = cli.run('--help')
-    assert res.code == 0 and '{optimize,init,doctor,run,report,apply,finish,requirements,exp}' in res.out and 'research harness' in res.out
+    assert res.code == 0 and '{optimize,init,doctor,run,report,apply,finish,requirements,exp,agent}' in res.out and 'research harness' in res.out
     for cmd in PRODUCT:
         r = cli.run(cmd, '--help')
         assert r.code == 0 and cmd in r.out, (cmd, r.text)
